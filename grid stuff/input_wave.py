@@ -65,8 +65,8 @@ def mouse_grid(grid_w,grid_h):
     return [m_pos[0]//(s_w//grid_w),m_pos[1]//(s_h//grid_h)]
 
 #Settings
-input_w = 20
-input_h = 20
+input_w = 16
+input_h = 16
 piece_size = 8
 pg.init()
 
@@ -77,8 +77,8 @@ colors = {-1: (0, 0, 0), 0: '#1C2730', 1: '#6C4E23', 2: '#535B60', 3:'#999DA8', 
 pieces = []
 
 
-want_s_w = 900
-want_s_h = 900
+want_s_w = 512
+want_s_h = 512
 s_w = (piece_size*input_w)*(want_s_w//(piece_size*input_w))
 s_h = (piece_size*input_h)*(want_s_h//(piece_size*input_h))
 
@@ -168,5 +168,4 @@ while running:
     update_pressed()
     pg.display.update()
     fps_clock.tick(fps)
-    print(int(fps_clock.get_fps()))
 pg.quit()

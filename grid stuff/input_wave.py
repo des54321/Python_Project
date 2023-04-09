@@ -168,4 +168,5 @@ while running:
     update_pressed()
     pg.display.update()
     fps_clock.tick(fps)
+    print(int(fps_clock.get_fps()))
 pg.quit()

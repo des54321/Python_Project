@@ -29,7 +29,7 @@ import pygame as pg
 import soft_body as sb
 from math import floor
 from pygame import Vector2
-from that_menu_thing import Menu, Text, Button, Slider
+from menu_engine import Menu, Text, Button, Slider
 from copy import deepcopy, copy
 import color_interpolation as clerp
 

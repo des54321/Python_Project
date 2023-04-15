@@ -4,7 +4,7 @@ from pygame import draw, Rect, Surface
 class TileMap:
 
     def __init__(self, colors, tile_size, grid_width, grid_height, pixel_size) -> None:
-        self.tiles = []
+        self.tiles = [[0 for __ in range(grid_height)] for _ in range(grid_width)]
         self.colors = colors
         self.tile_size = tile_size
         self.pixel_size = pixel_size

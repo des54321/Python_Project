@@ -76,17 +76,64 @@ def do_pattern(below = 0):
 
 
 
-pattern = [[0,1],[-2,2],[2,2],[-1,0],[1,0]]
-pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
-#pattern = [[0,2],[-1,0],[1,0]]
-multi = [1,1,1,1,1,1]
-gw = 640
-gh = 360
+# pattern = [[0,1],[-2,2],[2,2],[-1,0],[1,0]]
 
-tile_size = 2
+# pattern = []
+# amount = 5
+# for i in range(amount+1)[1:]:
+#     pattern.append([-(amount-i+1),i-1])
+#     pattern.append([(amount-i+1),i-1])
+
+# pattern = []
+# amount = 5
+# for i in range(amount):
+#     pattern.append([-((i%2)+1),i])
+#     pattern.append([(i%2)+1,i])
+
+# pattern = []
+# amount = 4
+# for i in range(amount):
+#     pattern.append([-i-1,0])
+#     pattern.append([i+1,0])
+
+# pattern = []
+# amount = 2
+# for i in range(amount):
+#     if i%2 == 1:
+#         pattern.append([0,i])
+#     else:
+#         pattern.append([-1,i])
+#         pattern.append([1,i])
+
+
+# pattern = []
+# amount = 5
+# for i in range(amount+1)[1:]:
+#     pattern.append([-i,i-1])
+#     pattern.append([i,i-1])
+
+
+pattern = []
+amount = 3
+for i in range(amount):
+    pattern.append([-1,i])
+    pattern.append([1,i])
+
+
+
+#pattern = [[0, 0], [-3, 3], [-3, 1], [-3, 2], [-2, 1], [2, 2]]
+#pattern = [[0,2],[-1,0],[1,0]]
+#pattern = [[2, 2], [-1, 0], [2, 1], [1, 0], [-1, 0]]
+
+
+multi = [1 for _ in range(len(pattern))]
+gw = 1600
+gh = 900
+tile_size = 1
 
 colors = 2
 color = clerp.ColorLerp(((20,140,40),(220,230,50),(245,60,80),(40,240,220)),[0.33,0.66])
+color = clerp.ColorLerp(((0,0,0),(255,255,255)),[])
 
 
 grid = np.array([[0 for __ in range(gh)] for _ in range(gw)])

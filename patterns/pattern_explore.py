@@ -4,6 +4,7 @@ import numpy as np
 import color_interpolation as clerp
 from math import floor, cos
 from color_interpolation import lerp
+from random import randint
 
 
 pressed_letters = ['SPACE','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
@@ -66,7 +67,13 @@ def do_layer(layer):
             if in_grid(i+x[0],layer-1-x[1]):
                 count += grid[i+x[0]][layer-1-x[1]]*multi[n]
         
-        grid[i][layer] = count%colors
+        if ran_chance != 0:
+            if randint(1,ran_chance) == ran_chance:
+                grid[i][layer] = randint(0,colors-1)
+            else:
+                grid[i][layer] = count%colors
+        else:
+            grid[i][layer] = count%colors
                 
 
 
@@ -157,6 +164,10 @@ def find_rays(fov:float,step:float,dir:Vector2,start:Vector2,num:int):
     return rays
 
 
+def draw_grid():
+    for x in range(gw):
+        for y in range(gh):
+                pg.draw.rect(screen,color_tile.get(min(grid[x][y],colors-1)/(colors-1)),pg.Rect(tile_size*x,tile_size*y,tile_size,tile_size))
 
 
 
@@ -165,16 +176,34 @@ def find_rays(fov:float,step:float,dir:Vector2,start:Vector2,num:int):
 pattern = [[0,1],[-2,2],[2,2],[-1,0],[1,0]]
 pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
 # pattern = [[0,2],[-1,0],[1,0]]
-multi = [1,1,1,1,1,1]
-gw = 640
-gh = 360
+pattern = []
+for i in range(randint(2,6)):
+    pattern.append([randint(-3,3),randint(0,2)])
+
+pattern = []
+amount = 5
+for i in range(amount):
+    pattern.append([-((i%2)+1),i])
+    pattern.append([(i%2)+1,i])
+
+# pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
+print(pattern)
+
+multi = [1 for _ in range(len(pattern))]
+gw = 320
+gh = 180
+
+ran_chance = 0
 
 
 
 
 
+colors = randint(2,4)
 colors = 2
+print(colors)
 color = clerp.ColorLerp(((90,220,40),(40,60,10),(110,20,220)),[0.5])
+color_tile = clerp.ColorLerp(((20,140,40),(220,230,50),(245,60,80),(40,240,220)),[0.33,0.66])
 
 
 grid = np.array([[0 for __ in range(gh)] for _ in range(gw)])
@@ -182,25 +211,32 @@ grid[gw//2][0] = 1
 
 do_pattern()
 
+grid[gw//2][0] = 0
+grid[gw//2][1] = 0
+
 
 
 
 pg.init()
 sw = 1600
 sh = 900
-p_pos = Vector2(gw//2 + 0.5,270.5)
+
+tile_size = min(floor(sw/gw),floor(sh/gh))
+
+p_pos = Vector2(gw//2 + 0.5,0.5)
 p_dir = 45
 dir_vec = Vector2()
 dir_vec.from_polar((1,p_dir))
 fov = 90
-fog = 40
+fog = 80
 
 rot_speed = 2
-move_speed = 0.05
-step_size = 0.25
-mini_step_size = 10
+true_move_speed = 3
+move_speed = true_move_speed
+step_size = 0.3
+mini_step_size = 8
 
-res = 6
+res = 8
 
 
 
@@ -242,7 +278,7 @@ while running:
             p_pos.y += (dir_vec*move_speed).y
     
     
-    if key_press('SPACE'):
+    if key_down(pg.K_SPACE):
         grid[floor(p_pos[0])][floor(p_pos[1])] = colors
 
     
@@ -266,9 +302,16 @@ while running:
     
     pg.draw.rect(screen,sky_color,pg.Rect(0,0,sw,sh/2))
     pg.draw.rect(screen,floor_color,pg.Rect(0,sh/2,sw,sh/2))
-    find_rays(fov,step_size,p_dir,p_pos,sw//res)
+    if key_down(pg.K_m):
+        screen.fill((0,0,0))
+        draw_grid()
+        pg.draw.rect(screen,(0,0,40),pg.Rect(tile_size*floor(p_pos.x),tile_size*floor(p_pos.y),tile_size,tile_size))
+    else:
+        find_rays(fov,step_size,p_dir,p_pos,sw//res)
     update_pressed()
     pg.display.update()
     fps_clock.tick(fps)
-    print(int(fps_clock.get_fps()))
+    move_speed = true_move_speed/max(fps_clock.get_fps(),10)
+    if key_down(pg.K_LSHIFT):
+        move_speed *= 8
 pg.quit()

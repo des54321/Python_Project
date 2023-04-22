@@ -127,9 +127,9 @@ for i in range(amount):
 
 
 multi = [1 for _ in range(len(pattern))]
-gw = 1600
-gh = 900
-tile_size = 1
+gw = 400
+gh = 225
+tile_size = 4
 
 colors = 2
 color = clerp.ColorLerp(((20,140,40),(220,230,50),(245,60,80),(40,240,220)),[0.33,0.66])

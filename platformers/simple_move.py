@@ -59,12 +59,19 @@ friction = plaforming.Ability(0,'all',0,1,'all',None,0.8,1,0)
 left = plaforming.Ability(1,'all',1,1,'all',pg.K_a,-0.012,0,0)
 right = plaforming.Ability(1,'all',1,1,'all',pg.K_d,0.012,0,0)
 jump = plaforming.Ability(2,'all',2,2,[False,True,False,False],pg.K_w,0,-0.1,0,[False,True])
-dash_left = plaforming.Ability(2,'all',2,1,[False,True,False,False],[pg.K_a,pg.K_UP],-0.2,0,8)
-dash_right = plaforming.Ability(2,'all',2,1,[False,True,False,False],[pg.K_d,pg.K_UP],0.2,0,8)
-ceil_hang = plaforming.Ability(2,[False,False,False,True],1,1,'all',pg.K_SPACE,0,-0.1,0,[False,True])
-rand_ab = random_abil(True)
 
-player = plaforming.Player(Vector2(1.5,1.5),tiles.tiles,[gravity,ceil_hang,friction,left,right,jump,dash_left,dash_right,rand_ab],0.5,0.5,Vector2(0.02,-0.02))
+stop = plaforming.Ability(2,[False]*4,0,1,'all',None,0,0)
+
+dash_left = plaforming.Ability(2,'all',2,2,[False,True,False,False],[pg.K_a,pg.K_UP],-0.2,0,8,[True,False])
+dash_right = plaforming.Ability(2,'all',2,2,[False,True,False,False],[pg.K_d,pg.K_UP],0.2,0,8,[True,False])
+dash = plaforming.Ability(2,'all',2,1,[False,True,False,False],pg.K_UP,0,0,8,[True,True],[dash_left,dash_right],stop)
+
+
+ceil_hang = plaforming.Ability(2,[False,False,False,True],1,1,'all',pg.K_SPACE,0,-0.1,0,[False,True])
+#rand_ab = random_abil(True)
+
+
+player = plaforming.Player(Vector2(1.5,1.5),tiles.tiles,[gravity,ceil_hang,friction,left,right,jump,dash,dash_left,dash_right],0.5,0.5,Vector2(0.02,-0.02))
 
 
 

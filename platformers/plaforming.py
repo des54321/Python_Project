@@ -1,4 +1,6 @@
-from pygame import Vector2, key
+import pygame as pg
+from pygame import Vector2
+from random import random, randint
 from math import floor
 
 coyote_time = 10
@@ -7,28 +9,42 @@ mini_steps = 4
 
 
 
+def key_down(key : pg.key) -> bool:
+    return pg.key.get_pressed()[key]
+
+
+
+
+
 
 class Ability:
 
-    def __init__(self,operation_type:int,conditions:list,press_type:list,amount:int,reset:list,key:str,x:float,y:float,repeat:int):
+    def __init__(self,operation_type:int,conditions:list,press_type:int,amount:int,reset:list,key,x:float,y:float,repeat:int = 0, affect:list = [True,True]):
         '''
         The class that defines a movement ability
 
         operation_type: 0 (multiply), 1 (add), 2 (set)
-        conditions: whether you can use the ability [in air, on ground, on wall, on ceiling]
+        conditions: whether you can use the ability [in air, on ground, on wall, on ceiling], or 'all'
         press_type: 0 (happens every frame), 1 (every frame when key is held), 2 (once when the key is pressed)
         amount: how many times you can use the ability without it being reset
-        reset: when the ability is reset [in air, on ground, on wall, on ceiling]
+        reset: when the ability is reset [in air, on ground, on wall, on ceiling], or 'all'
         key: what key is pressed to use the ability
         x: the vaule of the operation performed of vx
         y: the vaule of the operation performed of vy
         repeat: how many frames the operation will happen for
+        affect: if it affects [x,y]
         '''
         self.operation_type = operation_type
-        self.conditions = conditions
+        if conditions == 'all':
+            self.conditions = [True,True,True,True]
+        else:
+            self.conditions = conditions
         self.press_type = press_type
         self.amount = amount
-        self.reset = reset
+        if reset == 'all':
+            self.reset = [True,True,True,True]
+        else:
+            self.reset = reset
         self.key = key
         self.x = x
         self.y = y
@@ -36,6 +52,7 @@ class Ability:
         self.repeat_num = 0
         self.was_pressed = False
         self.amount_num = 0
+        self.affect = affect
 
 
 
@@ -51,6 +68,9 @@ class Player:
         self.pw = player_w
         self.ph = player_h
         self.update_player_hitbox()
+        self.coyote_time = [0,0,0,0]
+        self.coyote_touch = [False,False,False,False]
+        self.real_touch = [False,False,False,False]
     
 
     def update_player_hitbox(self):
@@ -62,12 +82,139 @@ class Player:
 
     
     def update(self):
-        for i in range(mini_steps):
+        self.real_touch = self.get_touching()
+        for i in range(4):
+            self.coyote_time[i] = max(0,self.coyote_time[i]-1)
+            if self.real_touch[i]:
+                self.coyote_time[i] = coyote_time
+            if self.coyote_time[i] == 0:
+                self.coyote_touch[i] = False
+            else:
+                self.coyote_touch[i] = True
+
+
+        for i in self.abilities:
+            self.ability_update(i)
+
+        self.move()
+    
+
+    def ability_update(self,abil:Ability):
+        if abil.repeat_num > 0:
+            if abil.operation_type == 0:
+                self.vel.x *= abil.x
+                self.vel.y *= abil.y
+            if abil.operation_type == 1:
+                self.vel.x += abil.x
+                self.vel.y += abil.y
+            if abil.operation_type == 2:
+                self.vel.x = abil.x
+                self.vel.y = abil.y
+            abil.repeat_num = max(0,abil.repeat_num-1)
+            return 0
+
+        meets_condition = False
+        for i in range(4):
+            if abil.reset[i] and self.real_touch[i]:
+                abil.amount_num = abil.amount
+            if abil.conditions[i] and self.coyote_touch[i]:
+                meets_condition = True
+        
+
+        
+        if abil.amount_num > 0 and meets_condition:
+            attempt = False
+            if abil.press_type == 0:
+                attempt = True
+            
+            if abil.press_type == 1:
+                key_pressed = True
+                if type(abil.key) == list:
+                    for i in abil.key:
+                        key_pressed = key_down(i) and key_pressed
+                else:
+                    key_pressed = key_down(abil.key)
+
+                if key_pressed:
+                    attempt = True
+            
+            if abil.press_type == 2:
+                key_pressed = True
+                if type(abil.key) == list:
+                    for i in abil.key:
+                        key_pressed = key_down(i) and key_pressed
+                else:
+                    key_pressed = key_down(abil.key)
+
+                if key_pressed:
+                    if not abil.was_pressed:
+                        attempt = True
+                    abil.was_pressed = True
+                else:
+                    abil.was_pressed = False
+
+            
+            if attempt:
+                if abil.operation_type == 0:
+                    self.vel.x *= abil.x
+                    self.vel.y *= abil.y
+                if abil.operation_type == 1:
+                    self.vel.x += abil.x
+                    self.vel.y += abil.y
+                if abil.operation_type == 2:
+                    if abil.affect[0]:
+                        self.vel.x = abil.x
+                    if abil.affect[1]:
+                        self.vel.y = abil.y
+                
+                abil.amount_num -= 1
+                abil.repeat_num = abil.repeat
+
+
+
+
+    def get_touching(self):
+        final = [False,False,False,False]
+        self.pos.y += 0.03125
+        if self.player_collide():
+            final[1] = True
+        self.pos.y -= 0.0625
+        if self.player_collide():
+            final[3] = True
+        self.pos.y += 0.03125
+        self.pos.x += 0.03125
+        if self.player_collide():
+            final[2] = True
+        self.pos.x -= 0.0625
+        if self.player_collide():
+            final[2] = True
+        self.pos.x += 0.03125
+        if not(final[1] or final[2] or final[3]):
+            final[0] = True
+        return final
+
+
+    def move(self):
+        for _ in range(mini_steps):
             self.pos.x += self.vel.x/mini_steps
-            if self.collide(self.pos):
-                pass
-
-
+            if self.player_collide():
+                if self.vel.x < 0:
+                    self.pos.x += 1-((self.pos.x-self.pw/2) - floor(self.pos.x-self.pw/2))
+                    self.pos.x += 0.001
+                else:
+                    self.pos.x -= (self.pos.x+self.pw/2) - floor(self.pos.x+self.pw/2)
+                    self.pos.x -= 0.001
+                self.vel.x = 0
+            
+            self.pos.y += self.vel.y/mini_steps
+            if self.player_collide():
+                if self.vel.y< 0:
+                    self.pos.y += 1-((self.pos.y-self.ph/2) - floor(self.pos.y-self.ph/2))
+                    self.pos.y += 0.001
+                else:
+                    self.pos.y -= (self.pos.y+self.ph/2) - floor(self.pos.y+self.ph/2)
+                    self.pos.y -= 0.001
+                self.vel.y = 0
 
     def collide(self,pos:Vector2):
         if pos.x >= self.gw:
@@ -78,7 +225,7 @@ class Player:
             return True
         if pos.y < 0:
             return True
-        if self.grid[floor(pos.x),floor(pos.y)] == 1:
+        if self.grid[floor(pos.x)][floor(pos.y)] == 1:
             return True
         
         return False

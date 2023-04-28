@@ -15,7 +15,7 @@ class TileMap:
     
 
     def add_tile(self, value):
-        self.tiles.append(value)
+        self.tile_pal.append(value)
         self.update_sur()
     
 

@@ -54,24 +54,27 @@ tiles.tile_pal = [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[2,
 tiles.update_sur()
 
 
-gravity = plaforming.Ability(1,'all',0,1,'all',None,0,0.004,0)
+gravity = plaforming.Ability(1,'all',0,1,'all',None,0,0.008,0)
 friction = plaforming.Ability(0,'all',0,1,'all',None,0.8,1,0)
 left = plaforming.Ability(1,'all',1,1,'all',pg.K_a,-0.012,0,0)
 right = plaforming.Ability(1,'all',1,1,'all',pg.K_d,0.012,0,0)
 jump = plaforming.Ability(2,'all',2,2,[False,True,False,False],pg.K_w,0,-0.1,0,[False,True])
 
-stop = plaforming.Ability(2,[False]*4,0,1,'all',None,0,0)
+stop = plaforming.Ability(0,[False]*4,0,1,'all',None,1,0.5)
 
-dash_left = plaforming.Ability(2,'all',2,2,[False,True,False,False],[pg.K_a,pg.K_UP],-0.2,0,8,[True,False])
-dash_right = plaforming.Ability(2,'all',2,2,[False,True,False,False],[pg.K_d,pg.K_UP],0.2,0,8,[True,False])
-dash = plaforming.Ability(2,'all',2,1,[False,True,False,False],pg.K_UP,0,0,8,[True,True],[dash_left,dash_right],stop)
+dash = plaforming.Ability(2,[False]*4,0,1,'all',None,0,0,8)
+
+dashes = plaforming.AbilAmount(1)
+dash_left = plaforming.Ability(2,'all',2,dashes,[False,True,False,False],[pg.K_a,pg.K_UP],-0.15,0,10,[True,False],stop,dash)
+dash_right = plaforming.Ability(2,'all',2,dashes,[False,True,False,False],[pg.K_d,pg.K_UP],0.15,0,10,[True,False],stop,dash)
+dash_up = plaforming.Ability(2,'all',2,dashes,[False,True,False,False],[pg.K_w,pg.K_UP],0,-0.15,10,[False,True],stop,dash)
+dash_down = plaforming.Ability(2,'all',2,dashes,[False,True,False,False],[pg.K_s,pg.K_UP],0,0.15,10,[False,True],stop,dash)
 
 
 ceil_hang = plaforming.Ability(2,[False,False,False,True],1,1,'all',pg.K_SPACE,0,-0.1,0,[False,True])
-#rand_ab = random_abil(True)
 
 
-player = plaforming.Player(Vector2(1.5,1.5),tiles.tiles,[gravity,ceil_hang,friction,left,right,jump,dash,dash_left,dash_right],0.5,0.5,Vector2(0.02,-0.02))
+player = plaforming.Player(Vector2(1.5,1.5),tiles.tiles,[gravity,ceil_hang,friction,left,right,jump,dash,dash_left,dash_right,dash_down,dash_up],0.5,0.5,Vector2(0.02,-0.02))
 
 
 

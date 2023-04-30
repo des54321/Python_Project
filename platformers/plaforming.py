@@ -14,12 +14,31 @@ def key_down(key : pg.key) -> bool:
 
 
 
+class AbilAmount:
+
+    def __init__(self,amount) -> None:
+        self.amount = amount
+        self.amount_num = 0
+        self.resolve()
+    
+
+    def use(self):
+        self.amount_num -= 1
+        self.amount_num = max(self.amount_num,0)
+    
+
+    def reset(self):
+        self.amount_num = self.amount
+    
+
+    def resolve(self):
+        self.real = self.amount_num
 
 
 
 class Ability:
 
-    def __init__(self,operation_type:int,conditions:list,press_type:int,amount:int,reset:list,key,x:float,y:float,repeat:int = 0,affect:list = [True,True],uses:list = None,at_end:any = None):
+    def __init__(self,operation_type:int,conditions:list,press_type:int,amount:AbilAmount,reset:list,key,x:float,y:float,repeat:int = 0,affect:list = [True,True],at_end:any = None,at_start:any = None):
         '''
         The class that defines a movement ability
 
@@ -33,30 +52,37 @@ class Ability:
         y: the vaule of the operation performed of vy
         repeat: how many frames the operation will happen for
         affect: if it affects [x,y]
-        uses: if the abilitie uses the amount of other abilities
         at_end: what ability should ativate when the ability ends
+        at_start: what ability should ativate when the ability starts
         '''
         self.operation_type = operation_type
+
         if conditions == 'all':
             self.conditions = [True,True,True,True]
         else:
             self.conditions = conditions
+        
         self.press_type = press_type
-        self.amount = amount
+
+        if type(amount) == int:
+            self.amount_var = AbilAmount(amount)
+        else:
+            self.amount_var = amount
+        
         if reset == 'all':
             self.reset = [True,True,True,True]
         else:
             self.reset = reset
+        
         self.key = key
         self.x = x
         self.y = y
         self.repeat = repeat
         self.repeat_num = 0
         self.was_pressed = False
-        self.amount_num = 0
         self.affect = affect
-        self.uses = uses
         self.at_end = at_end
+        self.at_start = at_start
 
 
 
@@ -99,37 +125,35 @@ class Player:
 
         for i in self.abilities:
             self.ability_update(i)
+        
+        for i in self.abilities:
+            i:Ability
+            i.amount_var.resolve()
 
         self.move()
     
 
     def ability_update(self,abil:Ability):
         if abil.repeat_num > 0:
-            if abil.operation_type == 0:
-                self.vel.x *= abil.x
-                self.vel.y *= abil.y
-            if abil.operation_type == 1:
-                self.vel.x += abil.x
-                self.vel.y += abil.y
-            if abil.operation_type == 2:
-                self.vel.x = abil.x
-                self.vel.y = abil.y
-            abil.repeat_num = max(0,abil.repeat_num-1)
+            self.use_abil(abil)
+            abil.repeat_num = max(abil.repeat_num-1,0)
+
             if abil.repeat_num == 0:
                 if not abil.at_end == None:
                     self.use_abil(abil.at_end)
+                    abil.at_end.repeat_num = abil.at_end.repeat
             return 0
 
         meets_condition = False
         for i in range(4):
             if abil.reset[i] and self.real_touch[i]:
-                abil.amount_num = abil.amount
+                abil.amount_var.reset()
             if abil.conditions[i] and self.coyote_touch[i]:
                 meets_condition = True
         
 
-        
-        if abil.amount_num > 0 and meets_condition:
+
+        if abil.amount_var.real > 0 and meets_condition:
             attempt = False
             if abil.press_type == 0:
                 attempt = True
@@ -163,7 +187,14 @@ class Player:
             
             if attempt:
                 self.use_abil(abil)
+                abil.amount_var.use()
+                if not abil.at_start == None:
+                    self.use_abil(abil.at_start)
+                    abil.at_start.repeat_num = abil.at_start.repeat
+                abil.repeat_num = abil.repeat
     
+
+
 
     def use_abil(self,abil:Ability):
         if abil.operation_type == 0:
@@ -177,18 +208,6 @@ class Player:
                 self.vel.x = abil.x
             if abil.affect[1]:
                 self.vel.y = abil.y
-        
-
-        abil.amount_num -= 1
-        abil.amount_num = max(abil.amount_num,0)
-        if not abil.uses == None:
-            for i in abil.uses:
-                i:Ability
-                i.amount_num -= 1
-                i.amount_num = max(i.amount_num,0)
-        abil.repeat_num = abil.repeat
-
-
 
 
     def get_touching(self):

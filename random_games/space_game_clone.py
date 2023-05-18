@@ -27,7 +27,7 @@ ppos = Vector2(1000,1000)
 pvel = Vector2((-2,0))
 psize = 50
 player_color = (25,230,100)
-collide_friction = 0.9
+collide_friction = 0.8
 size_of_area = 20000
 pox = 300
 player_got_ox = False
@@ -63,8 +63,9 @@ max_ox = 60
 
 min_ox = 30
 max_ox_size = 0.5
-max_planet_size = 350
+add_planet_size = 250
 min_planet_size = 100
+add_chance = 0.4
 spot_density = 0.0002
 spot_size = 40
 spot_size_tolerance = 0.2
@@ -253,16 +254,15 @@ def player_move():
     global gun_angle
     gun_angle = (get_m_pos_space()-ppos).normalize()
     pvel += calc_planet_pull(ppos)
-    old = ppos
     ppos += pvel
     touching = planet_touching(psize,ppos)
     if not touching == -1:
         new = ppos - touching.pos
         new.scale_to_length(touching.size+psize)
-        old -= touching.pos
-        pvel = (new-old)*collide_friction
         new += touching.pos
+        pvel = (new-(ppos - pvel))*collide_friction
         ppos = new
+    
     ppos.x = ((ppos.x+size_of_area)%(size_of_area*2))-size_of_area
     ppos.y = ((ppos.y+size_of_area)%(size_of_area*2))-size_of_area
 
@@ -275,11 +275,27 @@ def player_draw():
     else:
         draw_line(ppos+(gun_angle*gun_dist),ppos+(gun_angle*(gun_dist+gun_length)),gun_width,gun_color)
 
-    
+
+
+def rand_planet_size():
+    current = min_planet_size
+    current += randint(0,add_planet_size)
+    while random() < add_chance:
+        current += randint(0,add_planet_size)
+    return current
         
 
-for i in range(120):
-    planets.append(Planet(Vector2(ran_s()*size_of_area,ran_s()*size_of_area),randint(min_planet_size,max_planet_size),ran_color(),ran_s()*2))
+largest = 0
+for i in range(60):
+    planets.append(Planet(Vector2(ran_s()*size_of_area,ran_s()*size_of_area),rand_planet_size(),ran_color(),ran_s()*2))
+    if planets[-1].size > largest:
+        largest = planets[-1].size
+
+print(largest)
+
+
+
+
 left_m_down = False
 
 

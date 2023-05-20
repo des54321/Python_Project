@@ -16,6 +16,8 @@ menu_engine.default_font = 'Fonts/Orbitron-Medium.ttf'
 game_icon = pg.image.load('play.png')
 pg.display.set_icon(game_icon)
 pg.display.set_caption('Battle Game!')
+
+
 print(pg.joystick.get_count())
 controller_input = []
 controllers = []
@@ -48,12 +50,14 @@ red_tank_base = pg.image.load('Tanks/tank_bottom.png')
 green_tank_base = red_tank_base.copy()
 blue_tank_base = red_tank_base.copy()
 yellow_tank_base = red_tank_base.copy()
+immune_tank_base = red_tank_base.copy()
 
 #Make the tanks their color
 
 pixels_green = pg.PixelArray(green_tank_base)
 pixels_blue = pg.PixelArray(blue_tank_base)
 pixels_yellow = pg.PixelArray(yellow_tank_base)
+pixels_immune = pg.PixelArray(immune_tank_base)
                                            
 for x in range(green_tank_base.get_width()):
     for y in range(green_tank_base.get_height()):
@@ -77,9 +81,19 @@ for x in range(green_tank_base.get_width()):
         h, s, l, a = color.hsla
         color.hsla = (int(h) + yellow_team_hue) % 360, int(s), int(l), int(a)
         pixels_yellow[x][y] = color
+
+        #Make immune tank gray
+        rgb = immune_tank_base.unmap_rgb(pixels_immune[x][y])
+        color = pg.Color(*rgb)
+        h, s, l, a = color.hsla
+        color.hsla = int(h), 0, int(l), int(a)
+        pixels_immune[x][y] = color
+
+
 del pixels_green
 del pixels_blue
 del pixels_yellow
+del pixels_immune
 
 
 '''
@@ -132,7 +146,7 @@ def go_to_pause_menu():
 
 def go_to_game():
     global current_page
-    if len(players) == 0:
+    if len(players) < 2:
         declare('Set-up chars first')
     else:
         current_page = 'game'
@@ -237,6 +251,29 @@ def respawn_immunity_slider_func(set_get):
         respawn_immunity = var_min+((var_max-var_min)*set_get)
 
 
+
+#Char select funcs
+
+
+def add_player():
+    players.append(Player(all_chars[0],'red',0,0,['keyboard',0]))
+
+
+def remove_player():
+    del players[-1]
+
+
+def next_char(player):
+    if player < len(players):
+        players[player].type = all_chars[(all_chars.index(players[player].type)+1)%len(all_chars)]
+
+
+def pre_char(player):
+    if player < len(players):
+        players[player].type = all_chars[(all_chars.index(players[player].type)-1)%len(all_chars)]
+
+
+
 #Class lists
 bullets = []
 players = []
@@ -257,14 +294,17 @@ delcare_menu = Menu(screen, Vector2(s_w*0.5,s_h*0.9), Vector2(s_w*0.5,s_h),s_w*0
 
 #Start menu
 start_button = Button('Play ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.4),Vector2(0.3,0.1),go_to_game,'press',15,text_pos=['right','center'])
-settings_button_main = Button('Options ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.55),Vector2(0.3,0.1),go_to_settings,'press',15,text_pos=['right','center'])
+settings_button_main = Button('Options ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.7),Vector2(0.3,0.1),go_to_settings,'press',15,text_pos=['right','center'])
+char_select_button = Button('Chars ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.55),Vector2(0.3,0.1),go_to_char_select,'press',15,text_pos=['right','center'])
 title_text = Text('Battle Game', (color_pal[0],color_pal[2]),Vector2(0.4,0.1),Vector2(0.4,0.2),False)
 
-start_menu = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[0],0,[start_button,title_text,settings_button_main])
+start_menu = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[0],0,[start_button,title_text,settings_button_main,char_select_button])
 
 
 #Character select
-char_select = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[1],0,[])
+add_player_button = Button('Add Player',(color_pal[1],color_pal[2]),Vector2(0.15,0.88),Vector2(0.25,0.08),add_player,'press',5)
+done_char_button = Button('Done',(color_pal[1],color_pal[2]),Vector2(0.55,0.88),Vector2(0.25,0.08),go_to_start,'press',5)
+char_select = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[0],0,[add_player_button,done_char_button])
 
 
 #Pause menu
@@ -364,7 +404,7 @@ def draw_grid():
         pg.draw.line(screen,[i * 0.4 for i in backdrop],[0,y],[s_w,y],5)
 
 
-def all_colors_of(surface):
+def all_colors_of(surface:pg.Surface):
     '''
     Gives a list of that surface in all the team colors
     '''
@@ -372,40 +412,53 @@ def all_colors_of(surface):
     green_top = red_top.copy()
     blue_top = red_top.copy()
     yellow_top = red_top.copy()
+    immune_top = red_top.copy()
 
     #Make the surfaces their color
 
     pixels_green = pg.PixelArray(green_top)
     pixels_blue = pg.PixelArray(blue_top)
     pixels_yellow = pg.PixelArray(yellow_top)
+    pixels_immune = pg.PixelArray(immune_top)
                                             
-    for x in range(red_top.get_width()):
-        for y in range(red_top.get_height()):
-            #Make green surface green
+    for x in range(green_top.get_width()):
+        for y in range(green_top.get_height()):
+            #Make green tank green
             rgb = green_top.unmap_rgb(pixels_green[x][y])
             color = pg.Color(*rgb)
             h, s, l, a = color.hsla
             color.hsla = (int(h) + green_team_hue) % 360, int(s), int(l), int(a)
             pixels_green[x][y] = color
 
-            #Make blue surface blue
+            #Make blue tank blue
             rgb = blue_top.unmap_rgb(pixels_blue[x][y])
             color = pg.Color(*rgb)
             h, s, l, a = color.hsla
             color.hsla = (int(h) + blue_team_hue) % 360, int(s), int(l), int(a)
             pixels_blue[x][y] = color
 
-            #Make yellow surface yellow
+            #Make yellow tank yellow
             rgb = yellow_top.unmap_rgb(pixels_yellow[x][y])
             color = pg.Color(*rgb)
             h, s, l, a = color.hsla
             color.hsla = (int(h) + yellow_team_hue) % 360, int(s), int(l), int(a)
             pixels_yellow[x][y] = color
+
+            #Make immune tank gray
+            rgb = immune_top.unmap_rgb(pixels_immune[x][y])
+            color = pg.Color(*rgb)
+            h, s, l, a = color.hsla
+            color.hsla = int(h), 0, int(l), int(a)
+            pixels_immune[x][y] = color
+
+
     del pixels_green
     del pixels_blue
     del pixels_yellow
+    del pixels_immune
 
-    return [red_top,green_top,blue_top,yellow_top]
+    return [red_top,green_top,blue_top,yellow_top,immune_top]
+
 
 
 def collide_bullets():
@@ -547,6 +600,10 @@ def draw_tank_base(size,type,barrel:Vector2,team,x,y):
     elif team == 'yellow':
         base = pg.transform.scale(yellow_tank_base,(floor(s_size),floor(s_size*2)))
         index = 3
+    elif team == 'immune':
+        base = pg.transform.scale(immune_tank_base,(floor(s_size),floor(s_size*2)))
+        index = 4
+
 
     base = pg.transform.rotate(base,(barrel.angle_to(Vector2(0,0))*-1)-90)
     screen.blit(base,(s_x-(base.get_width()//2),s_y-(base.get_height()//2)))
@@ -832,12 +889,14 @@ class PlayerCharacter:
 
 
     def init_special_use(self,player) -> None:
+        player:Player
         if self == shotgun_char:
             fire_bullet(player.x+player.barrel.x,player.y+player.barrel.y,shotgun_bomb,Vector2(0,0).angle_to(player.barrel),0,1,player)
         if self == mine_layer:
             player.left = 18
         if self == cloner_char:
             for i,n in enumerate(players):
+                n:Player
                 if n.team == player.team:
                     players[i].immunity = 130
                     if not n == player:
@@ -903,7 +962,7 @@ class Player:
         return f'{self.x,self.y} pos, {self.vel} vel, {players.index(self)+1} number'
     
 
-    def __init__(self,group,team,x,y,control_scheme) -> None:
+    def __init__(self,group:PlayerCharacter,team,x,y,control_scheme) -> None:
         self.team = team
         self.type = group
         self.x = x
@@ -996,9 +1055,12 @@ class Player:
                     draw_tank_base(self.type.size,self.type,self.barrel,self.team,self.x,self.y)
                 draw_rect((self.x-self.type.size,self.y + self.type.size*1.5),(self.type.size*2* (self.health/self.type.max_health),self.type.size*0.2),healthbar_color,self.type.size*0.05)
             else:
-                draw_circle([self.x,self.y],self.type.size,tuple([128]*3))
-                draw_line([self.x,self.y],[self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//3,tuple([128]*3))
-                draw_circle([self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//6,tuple([128]*3))
+                if developer_art:
+                    draw_circle([self.x,self.y],self.type.size,tuple([128]*3))
+                    draw_line([self.x,self.y],[self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//3,tuple([128]*3))
+                    draw_circle([self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//6,tuple([128]*3))
+                else:
+                    draw_tank_base(self.type.size,self.type,self.barrel,'immune',self.x,self.y)
 
             if self.cool_down <= 0:
                 if developer_art:
@@ -1049,8 +1111,8 @@ turret_layer = PlayerCharacter('turret_layer',25,75,2,0.8,50,(100,255,255),turre
 orb_char = PlayerCharacter('orb_char',40,80,3,0.8,70,(100,10,140),small_orb,150,1,0)
 
 
-players.append(Player(shotgun_char,'green',0,0,['keyboard',4]))
-players.append(Player(blaster_char,'blue',50,0,['keyboard',2]))
+# players.append(Player(cloner_char,'green',0,0,['keyboard',4]))
+# players.append(Player(blaster_char,'blue',50,0,['keyboard',2]))
 
 
 
@@ -1138,7 +1200,6 @@ if __name__ == '__main__':
             pause_menu.full_update(events)
         elif current_page == 'settings':
             settings_menu.full_update(events)
-        print(teams)
         
         
         declare_box_timer = max(declare_box_timer-1,0)

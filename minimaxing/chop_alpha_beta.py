@@ -154,6 +154,9 @@ while running:
         valid = False
         while not valid:
             move = input('Your Move:')
+            if move == 'quit':
+                running = False
+                break
             if move == 'switch':
                 if sum(game.p1)%len(game.p1) == 0 and not (all([i==sum(game.p1)//len(game.p1) for i in game.p1])):
                     vaild = True
@@ -183,7 +186,7 @@ while running:
                 valid = True
         if move == 'switch':
             game.p1 = [sum(game.p1)//len(game.p1) for i in game.p1]
-        else:
+        elif move != 'quit':
             game.p2[move[1]] += game.p1[move[0]]
             game.p2[move[1]] %= game.mod
         turn = 'robot'

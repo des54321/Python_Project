@@ -44,6 +44,8 @@ green_team_hue = 130
 blue_team_hue = 210
 yellow_team_hue = 40
 
+bot_happy_dist = 50
+
 
 
 red_tank_base = pg.image.load('Tanks/tank_bottom.png')
@@ -208,6 +210,18 @@ def boundary_size_slider_func(set_get):
         boundary_size = var_min+((var_max-var_min)*set_get)
 
 
+bot_target_dist = 400
+def bot_target_dist_slider_func(set_get):
+    global bot_target_dist
+    
+    var_min = 150
+    var_max = 1200
+    if set_get == 'get':
+        return (bot_target_dist-var_min)/(var_max-var_min)
+    else:
+        bot_target_dist = var_min+((var_max-var_min)*set_get)
+
+
 developer_art_val = 0
 developer_art = False
 def developer_art_slider_func(set_get):
@@ -258,6 +272,20 @@ def respawn_immunity_slider_func(set_get):
         return (respawn_immunity-var_min)/(var_max-var_min)
     else:
         respawn_immunity = var_min+((var_max-var_min)*set_get)
+
+
+bots = 0
+def bots_slider_func(set_get):
+    global bots
+
+    var_min = 0
+    var_max = 7
+    if set_get == 'get':
+        return (bots-var_min)/(var_max-var_min)
+    else:
+        bots = var_min+((var_max-var_min)*set_get)
+    
+    bots = round(bots)
 
 
 
@@ -311,12 +339,12 @@ def update_player_menus():
                 if joy_num > n//player_menu_num:
                     players[n//player_menu_num].movement = ['controller',n//player_menu_num]
                     i.text = f'Controller {n//player_menu_num + 1}'
-                elif joy_num+len(keyboard_controls) > n//player_menu_num:
-                    players[n//player_menu_num].movement = ['keyboard',n//player_menu_num - joy_num]
-                    i.text = f'Keyboard {n//player_menu_num - joy_num + 1}'
+                elif joy_num+bots > n//player_menu_num:
+                    players[n//player_menu_num].movement = ['bot',n//player_menu_num - joy_num]
+                    i.text = f'Bot {n//player_menu_num - joy_num + 1}'
                 else:
-                    players[n//player_menu_num].movement = ['bot',n//player_menu_num - joy_num - len(keyboard_controls)]
-                    i.text = f'Bot {n//player_menu_num - joy_num - len(keyboard_controls) + 1}'
+                    players[n//player_menu_num].movement = ['keyboard',n//player_menu_num - joy_num - bots]
+                    i.text = f'Keyboard {n//player_menu_num - joy_num - bots + 1}'
 
         else:
             i.show = False
@@ -383,6 +411,8 @@ developer_art_slider = Slider("'Wow' art",(color_pal[1],color_pal[3],color_pal[2
 con_rot_slider = Slider("Joy Rot",(color_pal[1],color_pal[3],color_pal[2]),Vector2(0.05,0.50),Vector2(0.3,0.1),controller_barrel_rot_speed_slider_func,5)
 key_rot_slider = Slider("Key Rot",(color_pal[1],color_pal[3],color_pal[2]),Vector2(0.05,0.65),Vector2(0.3,0.1),keyboard_barrel_rot_speed_slider_func,5)
 rep_imm_slider = Slider("Immune Time",(color_pal[1],color_pal[3],color_pal[2]),Vector2(0.05,0.80),Vector2(0.3,0.1),respawn_immunity_slider_func,5)
+bot_target_dist_slider = Slider("Bot Target Dist",(color_pal[1],color_pal[3],color_pal[2]),Vector2(0.55,0.2),Vector2(0.3,0.1),bot_target_dist_slider_func,5)
+bots_slider = Slider("Bot Number",(color_pal[1],color_pal[3],color_pal[2]),Vector2(0.55,0.35),Vector2(0.3,0.1),bots_slider_func,5)
 
 
 
@@ -392,7 +422,7 @@ back_button_settings = Button(
 )
 settings_text = Text('Settings', (color_pal[0],color_pal[2]),Vector2(0.2,0.05),Vector2(0.6,0.1),False)
 
-settings_menu = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[boundary_size_slider,settings_text,back_button_settings,developer_art_slider,con_rot_slider,key_rot_slider,rep_imm_slider])
+settings_menu = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[boundary_size_slider,settings_text,back_button_settings,developer_art_slider,con_rot_slider,key_rot_slider,rep_imm_slider,bot_target_dist_slider,bots_slider])
 
 
 
@@ -1118,6 +1148,40 @@ class Player:
                 self.barrel.rotate_ip(controller_input[self.movement[1]][16][0]*-controller_barrel_rot_speed)
             self.vel.x += self.type.move_speed * controller_input[self.movement[1]][15][0]
             self.vel.y -= self.type.move_speed * controller_input[self.movement[1]][15][1]
+        elif self.movement[0] == 'bot':
+            target = closest_player(Vector2(self.x,self.y),self.team)
+            dist = Vector2(self.x,self.y).distance_to(Vector2(target.x,target.y))
+            dir = Vector2(target.x,target.y)-Vector2(self.x,self.y)
+            if abs(dist-bot_target_dist) > bot_happy_dist:
+                if dist > bot_target_dist:
+                    if target.y > self.y:
+                        self.vel.y += self.type.move_speed
+                    if target.x > self.x:
+                        self.vel.x += self.type.move_speed
+                    if target.y < self.y:
+                        self.vel.y -= self.type.move_speed
+                    if target.x < self.x:
+                        self.vel.x -= self.type.move_speed
+                else:
+                    if target.y < self.y:
+                        self.vel.y += self.type.move_speed
+                    if target.x < self.x:
+                        self.vel.x += self.type.move_speed
+                    if target.y > self.y:
+                        self.vel.y -= self.type.move_speed
+                    if target.x > self.x:
+                        self.vel.x -= self.type.move_speed
+            self.barrel = dir
+            self.barrel.scale_to_length(self.type.size*2)
+            if self.immunity <= 0:
+                if self.timer <= 0:
+                    self.timer = self.type.reload_time
+                    fire_bullet(self.x+self.barrel.x,self.y+self.barrel.y,self.type.fires,Vector2(0,0).angle_to(self.barrel),self.type.spread,self.type.amount,self)
+                if self.cool_down <= 0:
+                    self.cool_down = self.type.special_cooldown
+                    self.type.init_special_use(self)
+        
+
         if math.dist((0,0),(self.x,self.y)) > boundary_size-self.type.size:
             new = Vector2(self.x,self.y)
             new.scale_to_length(boundary_size-self.type.size)

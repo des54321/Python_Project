@@ -34,15 +34,15 @@ for controller in controllers:
 
 color_pal = ((33, 33, 33),(15, 76, 117),(50, 130, 184),(187, 225, 250))
 aim_type = 2
-# s_w = 1920
-# s_h = 1080
-# screen = pg.display.set_mode((s_w,s_h), pg.FULLSCREEN)
-s_w = 1600
-s_h = 900
-screen = pg.display.set_mode((s_w,s_h))
-green_team_hue = 110
-blue_team_hue = 200
-yellow_team_hue = 50
+sw = 1920
+sh = 1080
+screen = pg.display.set_mode((sw,sh), pg.FULLSCREEN)
+# sw = 1600
+# sh = 900
+# screen = pg.display.set_mode((sw,sh))
+green_team_hue = 130
+blue_team_hue = 210
+yellow_team_hue = 40
 
 
 
@@ -124,11 +124,9 @@ key_mapping = {
 
 
 #up,right,down,left,fire,aim1,aim2,special
-keyboard_controls = ((pg.K_UP,pg.K_RIGHT,pg.K_DOWN,pg.K_LEFT,pg.K_KP_5,pg.K_KP_1,pg.K_KP_3,pg.K_KP_0),
-                     (pg.K_h,pg.K_m,pg.K_n,pg.K_b,pg.K_SLASH,pg.K_COMMA,pg.K_PERIOD,pg.K_RSHIFT),
-                     (pg.K_w,pg.K_d,pg.K_s,pg.K_a,pg.K_SPACE,pg.K_n,pg.K_m,pg.K_LSHIFT),
-                     (pg.K_UP,pg.K_RIGHT,pg.K_DOWN,pg.K_LEFT,pg.K_y,pg.K_t,pg.K_u,pg.K_KP_0),
-                     (pg.K_i,pg.K_l,pg.K_k,pg.K_j,pg.K_RALT,pg.K_KP1,pg.K_KP3,pg.K_KP_ENTER)
+keyboard_controls = ((pg.K_w,pg.K_d,pg.K_s,pg.K_a,pg.K_SPACE,pg.K_n,pg.K_m,pg.K_LSHIFT),
+                     (pg.K_i,pg.K_l,pg.K_k,pg.K_j,pg.K_RALT,pg.K_KP1,pg.K_KP3,pg.K_KP_ENTER),
+                     (pg.K_UP,pg.K_DOWN,pg.K_LEFT,pg.K_RIGHT,pg.K_t,pg.K_r,pg.K_h,pg.K_0)
                      )
 
 
@@ -144,11 +142,22 @@ def go_to_pause_menu():
     current_page = 'pause'
 
 
-def go_to_game():
-    global current_page
+def go_to_game(reset=True):
+    global current_page, controllers, controller_input
     if len(players) < 2:
         declare('Set-up chars first')
     else:
+        if reset:
+            controller_input = []
+            controllers = []
+            for i in range(pg.joystick.get_count()):
+                controllers.append(pg.joystick.Joystick(i))
+                controller_input.append([False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,[0,0],[0,0],[False,False]])
+
+
+            for controller in controllers:
+                controller.init()
+            reset_players()
         current_page = 'game'
 
 
@@ -256,11 +265,12 @@ def respawn_immunity_slider_func(set_get):
 
 
 def add_player():
-    players.append(Player(all_chars[0],'red',0,0,['keyboard',0]))
+    if not len(players) > 7:
+        players.append(Player(all_chars[0],'red',0,0,['keyboard',0]))
 
 
-def remove_player():
-    del players[-1]
+def remove_player(player):
+    del players[players.index(player)]
 
 
 def next_char(player):
@@ -273,6 +283,41 @@ def pre_char(player):
         players[player].type = all_chars[(all_chars.index(players[player].type)-1)%len(all_chars)]
 
 
+def next_team(player):
+    if player < len(players):
+        players[player].team = team_names[(team_names.index(players[player].team)+1)%len(team_names)]
+
+
+def draw_player_menus():
+    for n,i in enumerate(players):
+        draw_tank_base(0.11*sh,i.type,Vector2(0,80),i.team,sw*((n%4)*0.2+0.2),sh*((n//4)*0.4+0.21),True)
+
+
+def update_player_menus():
+    if len(players) > 7:
+        add_player_button.icon = 'Max Players'
+    else:
+        add_player_button.icon = "Add Player"
+    
+    joy_num = pg.joystick.get_count()
+    for n,i in enumerate(player_menus):
+        if len(players) > n//player_menu_num:
+            i.show = True
+            if n%player_menu_num == 3:
+                i:Text
+                i.text = players[n//player_menu_num].type.name
+            if n%player_menu_num == 4:
+                i:Text
+                if joy_num > n//player_menu_num:
+                    players[n//player_menu_num].movement = ['controller',n//player_menu_num]
+                    i.text = f'Controller {n//player_menu_num + 1}'
+                else:
+                    players[n//player_menu_num].movement = ['keyboard',n//player_menu_num - joy_num]
+                    i.text = f'Keyboard {n//player_menu_num - joy_num + 1}'
+        else:
+            i.show = False
+
+
 
 #Class lists
 bullets = []
@@ -281,6 +326,7 @@ specials = []
 
 
 #Team data (red,green,blue,yellow) (kills,killed,players)
+team_names = ('red','green','blue','yellow')
 teams = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
 
 
@@ -289,7 +335,7 @@ teams = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
 
 #Declare box
 declare_box = Text('Nan',(None,color_pal[2]),Vector2(0,0),Vector2((1,1)),False)
-delcare_menu = Menu(screen, Vector2(s_w*0.5,s_h*0.9), Vector2(s_w*0.5,s_h),s_w*0.5,s_h*0.1,None,0,[declare_box],1/declare_box_fade)
+delcare_menu = Menu(screen, Vector2(sw*0.5,sh*0.9), Vector2(sw*0.5,sh),sw*0.5,sh*0.1,None,0,[declare_box],1/declare_box_fade)
 
 
 #Start menu
@@ -298,21 +344,32 @@ settings_button_main = Button('Options ', (color_pal[1],color_pal[2]),Vector2(-0
 char_select_button = Button('Chars ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.55),Vector2(0.3,0.1),go_to_char_select,'press',15,text_pos=['right','center'])
 title_text = Text('Battle Game', (color_pal[0],color_pal[2]),Vector2(0.4,0.1),Vector2(0.4,0.2),False)
 
-start_menu = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[0],0,[start_button,title_text,settings_button_main,char_select_button])
+start_menu = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[start_button,title_text,settings_button_main,char_select_button])
 
 
 #Character select
 add_player_button = Button('Add Player',(color_pal[1],color_pal[2]),Vector2(0.15,0.88),Vector2(0.25,0.08),add_player,'press',5)
-done_char_button = Button('Done',(color_pal[1],color_pal[2]),Vector2(0.55,0.88),Vector2(0.25,0.08),go_to_start,'press',5)
-char_select = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[0],0,[add_player_button,done_char_button])
+done_char_button = Button('Done',(color_pal[1],color_pal[2]),Vector2(0.6,0.88),Vector2(0.25,0.08),go_to_start,'press',5)
+
+#The player menus
+player_menu_num = 5
+player_menus = []
+for i in range(8):
+    player_menus.append(Button('Pre',(color_pal[1],color_pal[2]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.4),Vector2(0.05,0.04),pre_char,'press',5,True,True,i))
+    player_menus.append(Button('Next',(color_pal[1],color_pal[2]),Vector2((i%4)*0.2+0.225,(i//4)*0.4+0.4),Vector2(0.05,0.04),next_char,'press',5,True,True,i))
+    player_menus.append(Button('Change Team',(color_pal[1],color_pal[2]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.28),Vector2(0.15,0.04),next_team,'press',5,True,True,i))
+    player_menus.append(Text('None',(color_pal[2],color_pal[1]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.335),Vector2(0.15,0.05),False,15))
+    player_menus.append(Text('None',(color_pal[2],color_pal[1]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.05),Vector2(0.15,0.04),False,5))
+
+char_select = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[add_player_button,done_char_button]+player_menus)
 
 
 #Pause menu
-resume_button = Button('Resume', (color_pal[1],color_pal[2]),Vector2(0.35,0.45),Vector2(0.3,0.1),go_to_game,'press',10)
+resume_button = Button('Resume', (color_pal[1],color_pal[2]),Vector2(0.35,0.45),Vector2(0.3,0.1),go_to_game,'press',10,True,True,False)
 quit_to_main_pause = Button('Quit', (color_pal[1],color_pal[2]),Vector2(0.35,0.6),Vector2(0.3,0.1),go_to_start,'press',10)
 pause_text = Text('Pause', (color_pal[0],color_pal[2]),Vector2(0.2,0.1),Vector2(0.6,0.2),False)
 
-pause_menu = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[0],0,[resume_button,quit_to_main_pause,pause_text])
+pause_menu = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[resume_button,quit_to_main_pause,pause_text])
 
 
 
@@ -331,7 +388,7 @@ back_button_settings = Button(
 )
 settings_text = Text('Settings', (color_pal[0],color_pal[2]),Vector2(0.2,0.05),Vector2(0.6,0.1),False)
 
-settings_menu = Menu(screen, Vector2(0,0), Vector2(0,s_h),s_w,s_h,color_pal[0],0,[boundary_size_slider,settings_text,back_button_settings,developer_art_slider,con_rot_slider,key_rot_slider,rep_imm_slider])
+settings_menu = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[boundary_size_slider,settings_text,back_button_settings,developer_art_slider,con_rot_slider,key_rot_slider,rep_imm_slider])
 
 
 
@@ -347,6 +404,21 @@ game_menu = Menu(screen,Vector2(0,0),Vector2(0,0),80,80,backdrop,0,[fps_counter,
 
 
 #Viva el fuctions, yay
+
+
+def reset_players():
+    teams = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+    bullets = []
+    specials = []
+    for n,i in enumerate(players):
+        i:Player
+        teams[team_to_num(i.team)][2] += 1
+        i.reset()
+        pos = Vector2()
+        pos.from_polar((boundary_size-100,360*n/len(players)))
+        i.x = pos.x
+        i.y = pos.y
+
 
 def declare(txt):
     global declare_box_timer
@@ -396,12 +468,12 @@ def draw_bullets():
 
 
 def draw_grid():
-    for i in range(math.ceil(s_w/grid_spacing)):
+    for i in range(math.ceil(sw/grid_spacing)):
         x = (grid_spacing-((cam_x/zoom) % grid_spacing))+(i*grid_spacing)
-        pg.draw.line(screen,[i * 0.4 for i in backdrop],[x,0],[x,s_h],5)
-    for i in range(math.ceil(s_w/grid_spacing)):
+        pg.draw.line(screen,[i * 0.4 for i in backdrop],[x,0],[x,sh],5)
+    for i in range(math.ceil(sw/grid_spacing)):
         y = ((cam_y/zoom) % grid_spacing)+(i*grid_spacing)
-        pg.draw.line(screen,[i * 0.4 for i in backdrop],[0,y],[s_w,y],5)
+        pg.draw.line(screen,[i * 0.4 for i in backdrop],[0,y],[sw,y],5)
 
 
 def all_colors_of(surface:pg.Surface):
@@ -541,7 +613,7 @@ def adjust_camera():
     cam_y += ((min(y)+max(y))/2-cam_y)*cam_move_speed
     farthest_player = closest_player((cam_x,cam_y),0,True)
     most_dist = math.dist((farthest_player.x,farthest_player.y),(cam_x,cam_y))
-    zoom += ((((math.ceil(most_dist/zoom_radius)*zoom_radius)/s_h)*2)-zoom)*cam_zoom_speed
+    zoom += ((((math.ceil(most_dist/zoom_radius)*zoom_radius)/sh)*2)-zoom)*cam_zoom_speed
 
 
 def move_bullets():
@@ -574,20 +646,25 @@ def key_down(key : pg.key):
 
 
 def draw_circle(pos ,size : float,color : str,outline = 0):
-    pg.draw.circle(screen,color,[(pos[0]-cam_x)/zoom+(s_w/2),s_h-((pos[1]-cam_y)/zoom+(s_h/2))],round(size/zoom),outline)
+    pg.draw.circle(screen,color,[(pos[0]-cam_x)/zoom+(sw/2),sh-((pos[1]-cam_y)/zoom+(sh/2))],round(size/zoom),outline)
 
 
 def draw_line(pos1 ,pos2 ,size : float,color : str):
-    pg.draw.line(screen,color,[(pos1[0]-cam_x)/zoom+(s_w/2),s_h-((pos1[1]-cam_y)/zoom+(s_h/2))],[(pos2[0]-cam_x)/zoom+(s_w/2),s_h-((pos2[1]-cam_y)/zoom+(s_h/2))],round(size/zoom))
+    pg.draw.line(screen,color,[(pos1[0]-cam_x)/zoom+(sw/2),sh-((pos1[1]-cam_y)/zoom+(sh/2))],[(pos2[0]-cam_x)/zoom+(sw/2),sh-((pos2[1]-cam_y)/zoom+(sh/2))],round(size/zoom))
 
 def draw_rect(pos1 ,size ,color : str,corners: int):
-    pg.draw.rect(screen,color,pg.Rect((pos1[0]-cam_x)/zoom+(s_w/2),s_h-((pos1[1]-cam_y)/zoom+(s_h/2)),size[0]/zoom,size[1]/zoom),0,round(corners/zoom))
+    pg.draw.rect(screen,color,pg.Rect((pos1[0]-cam_x)/zoom+(sw/2),sh-((pos1[1]-cam_y)/zoom+(sh/2)),size[0]/zoom,size[1]/zoom),0,round(corners/zoom))
 
 
-def draw_tank_base(size,type,barrel:Vector2,team,x,y):
-    s_x = (x-cam_x)/zoom+(s_w/2)
-    s_y = s_h-((y-cam_y)/zoom+(s_h/2))
-    s_size = round(size/zoom)*2
+def draw_tank_base(size,type,barrel:Vector2,team,x,y,scr=False):
+    if scr:
+        s_x = x
+        s_y = y
+        s_size = size
+    else:
+        s_x = (x-cam_x)/zoom+(sw/2)
+        s_y = sh-((y-cam_y)/zoom+(sh/2))
+        s_size = round(size/zoom)*2
     if team == 'red':
         base = pg.transform.scale(red_tank_base,(floor(s_size),floor(s_size*2)))
         index = 0
@@ -613,8 +690,8 @@ def draw_tank_base(size,type,barrel:Vector2,team,x,y):
 
 
 def draw_sprite(x,y,dir,size,team,surfaces,rotate:bool = True):
-    s_x = (x-cam_x)/zoom+(s_w/2)
-    s_y = s_h-((y-cam_y)/zoom+(s_h/2))
+    s_x = (x-cam_x)/zoom+(sw/2)
+    s_y = sh-((y-cam_y)/zoom+(sh/2))
     s_size = round(size/zoom)*2
     if team == 'red':
         index = 0
@@ -624,7 +701,7 @@ def draw_sprite(x,y,dir,size,team,surfaces,rotate:bool = True):
         index = 2
     elif team == 'yellow':
         index = 3
-    if not (s_x-s_size>s_w or s_x+s_size<0 or s_y-s_size>s_h or s_y+s_size<0):
+    if not (s_x-s_size>sw or s_x+s_size<0 or s_y-s_size>sh or s_y+s_size<0):
         # image = pg.transform.rotate(surfaces[index],dir)
         # image = pg.transform.scale(image,(floor(s_size),floor(s_size*(surfaces[index].get_height()/surfaces[index].get_width()))))
         image = pg.transform.scale(surfaces[index],(floor(s_size),floor(s_size*(surfaces[index].get_height()/surfaces[index].get_width()))))
@@ -868,11 +945,12 @@ class Bullet:
 
 
 class PlayerCharacter:
-    def __init__(self,top_image:str,size:int,max_health:int,move_speed:float,drift:float,reload_time:int,color:tuple,bullet_type:BulletGroup,special_cooldown:int,amount:int,spread:int) -> None:
+    def __init__(self,top_image:str,size:int,max_health:int,move_speed:float,drift:float,reload_time:int,color:tuple,bullet_type:BulletGroup,special_cooldown:int,amount:int,spread:int,name:str) -> None:
         '''
         Top image is the file name of the image that its top is
         '''
         self.size = size
+        self.name = name
         self.max_health = max_health
         self.move_speed = move_speed
         self.drift = drift
@@ -1077,6 +1155,20 @@ class Player:
                 self.y = cam_y
                 self.health = self.type.max_health
                 self.immunity = respawn_immunity
+    
+
+    def reset(self):
+        self.health = self.type.max_health
+        self.vel = Vector2(0,0)
+        self.barrel = Vector2()
+        self.barrel.from_polar((self.type.size*2,0))
+        self.timer = 0
+        self.left = 0
+        self.wait = 0
+        self.cool_down = self.type.special_cooldown
+        self.immunity = respawn_immunity//3
+        self.dead = False
+
 
 
 
@@ -1100,15 +1192,15 @@ small_orb = BulletGroup('small_orb',12,13,20,(80,0,200),0.75,130)
 
 #Player Characters
 all_chars = []
-shotgun_char = PlayerCharacter('shotgun_char',30,60,6,0.4,50,(240,240,40),shotgun_pellet,1200,10,4)
-blaster_char = PlayerCharacter('blaster_char',25,40,3,0.7,30,(200,30,30),blaster_bolt,1200,1,0)
-tank_char = PlayerCharacter('tank_char',40,150,4,0.7,80,(60,20,200),tank_shell,750,1,0)
-cloner_char = PlayerCharacter('cloner_char',20,10,2,0.8,9,(60,255,30),cloner_bullet,1300,1,0)
-mine_layer = PlayerCharacter('mine_layer',40,100,2,0.6,60,(255,128,20),mine,600,1,0)
-speed_char = PlayerCharacter('speed_char',20,35,3,0.8,10,(255,100,255),speed_pellet,600,2,40)
-spin_char = PlayerCharacter('spin_char',40,55,0.8,0.95,40,(230,255,50),spin_char_bullet,1200,1,0)
-turret_layer = PlayerCharacter('turret_layer',25,75,2,0.8,50,(100,255,255),turret_bullet,600,3,5)
-orb_char = PlayerCharacter('orb_char',40,80,3,0.8,70,(100,10,140),small_orb,150,1,0)
+shotgun_char = PlayerCharacter('shotgun_char',30,60,6,0.4,50,(240,240,40),shotgun_pellet,1200,10,4,'Shotgun')
+blaster_char = PlayerCharacter('blaster_char',25,40,3,0.7,30,(200,30,30),blaster_bolt,1200,1,0,'Blaster')
+tank_char = PlayerCharacter('tank_char',40,150,4,0.7,80,(60,20,200),tank_shell,750,1,0,'Tank')
+cloner_char = PlayerCharacter('cloner_char',20,10,2,0.8,9,(60,255,30),cloner_bullet,1300,1,0,'Support')
+mine_layer = PlayerCharacter('mine_layer',40,100,2,0.6,60,(255,128,20),mine,600,1,0,'Mines')
+speed_char = PlayerCharacter('speed_char',20,35,3,0.8,10,(255,100,255),speed_pellet,600,2,40,'Speed')
+spin_char = PlayerCharacter('spin_char',40,55,0.8,0.95,40,(230,255,50),spin_char_bullet,1200,1,0,'Spinner')
+turret_layer = PlayerCharacter('turret_layer',25,75,2,0.8,50,(100,255,255),turret_bullet,600,3,5,'Turrets')
+orb_char = PlayerCharacter('orb_char',40,80,3,0.8,70,(100,10,140),small_orb,150,1,0,"Orbulator")
 
 
 # players.append(Player(cloner_char,'green',0,0,['keyboard',4]))
@@ -1193,7 +1285,9 @@ if __name__ == '__main__':
         if current_page == 'start':
             start_menu.full_update(events)
         elif current_page == 'char_select':
+            update_player_menus()
             char_select.full_update(events)
+            draw_player_menus()
         elif current_page == 'game':
             game_tick(events)
         elif current_page == 'pause':

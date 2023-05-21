@@ -126,7 +126,7 @@ key_mapping = {
 #up,right,down,left,fire,aim1,aim2,special
 keyboard_controls = ((pg.K_w,pg.K_d,pg.K_s,pg.K_a,pg.K_SPACE,pg.K_n,pg.K_m,pg.K_LSHIFT),
                      (pg.K_i,pg.K_l,pg.K_k,pg.K_j,pg.K_RALT,pg.K_KP1,pg.K_KP3,pg.K_KP_ENTER),
-                     (pg.K_UP,pg.K_DOWN,pg.K_LEFT,pg.K_RIGHT,pg.K_t,pg.K_r,pg.K_h,pg.K_0)
+                     (pg.K_UP,pg.K_RIGHT,pg.K_DOWN,pg.K_LEFT,pg.K_t,pg.K_r,pg.K_h,pg.K_KP0)
                      )
 
 
@@ -311,9 +311,13 @@ def update_player_menus():
                 if joy_num > n//player_menu_num:
                     players[n//player_menu_num].movement = ['controller',n//player_menu_num]
                     i.text = f'Controller {n//player_menu_num + 1}'
-                else:
+                elif joy_num+len(keyboard_controls) > n//player_menu_num:
                     players[n//player_menu_num].movement = ['keyboard',n//player_menu_num - joy_num]
                     i.text = f'Keyboard {n//player_menu_num - joy_num + 1}'
+                else:
+                    players[n//player_menu_num].movement = ['bot',n//player_menu_num - joy_num - len(keyboard_controls)]
+                    i.text = f'Bot {n//player_menu_num - joy_num - len(keyboard_controls) + 1}'
+
         else:
             i.show = False
 
@@ -407,6 +411,7 @@ game_menu = Menu(screen,Vector2(0,0),Vector2(0,0),80,80,backdrop,0,[fps_counter,
 
 
 def reset_players():
+    global bullets,specials
     teams = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
     bullets = []
     specials = []
@@ -747,10 +752,13 @@ class SpecialGroup:
             self.color = (80,10,20)
             self.size = 100
         
+        if not kind == None:
+            self.images = all_colors_of(pg.image.load('Projectiles/Specials/'+kind+'.png'))
+        
 
 
 class Special:
-    def __init__(self,type,x,y,extra = None,extra2 = None) -> None:
+    def __init__(self,type:SpecialGroup,x,y,extra = None,extra2 = None) -> None:
         self.x =x
         self.y = y
         self.type = type
@@ -769,10 +777,7 @@ class Special:
             new = Vector2(0,0)
             new.from_polar((self.type.speed,extra2))
             self.vel = new
-        
-        if type == large_sheild:
-            self.came_from = extra
-            self.rotation = Vector2(self.type.size,0)
+    
 
     
     def tick(self) -> None:
@@ -783,8 +788,9 @@ class Special:
 
             #Turret aiming
             toward = closest_player([self.x,self.y],self.came_from.team)
-            between = Vector2((toward.x-self.x),(toward.y-self.y))
-            between.scale_to_length(2)
+            toward_pos = Vector2(toward.x,toward.y)+(toward.vel/self.type.fires.speed)*Vector2((toward.x-self.x),(toward.y-self.y)).length()
+            between = toward_pos-Vector2(self.x,self.y)
+            between.scale_to_length(8)
             new = self.barrel + between
             new.scale_to_length(self.type.size*2)
             self.barrel = new
@@ -824,23 +830,28 @@ class Special:
             #Running out of time
             if self.time_left <= 0:
                 del specials[specials.index(self)]
-        
-        if self.type == large_sheild:
-            if not self.came_from.vel.length() <= 0.2:
-                self.rotation = self.came_from.vel.scale_to_
+
 
 
     def draw(self) -> None:
         #Runs every frame, but only the way that specials are drawn should go here, all the rest goes in 'tick'
 
-        if self.type == small_turret:
-            draw_circle([self.x,self.y],self.type.size,[i * (self.health/self.type.max_health) for i in self.type.color])
-            draw_line([self.x,self.y],[self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//3,[i * (self.health/self.type.max_health) for i in self.type.color])
-            draw_circle([self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//6,[i * (self.health/self.type.max_health) for i in self.type.color])
+        if developer_art:
+            if self.type == small_turret:
+                draw_circle([self.x,self.y],self.type.size,[i * (self.health/self.type.max_health) for i in self.type.color])
+                draw_line([self.x,self.y],[self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//3,[i * (self.health/self.type.max_health) for i in self.type.color])
+                draw_circle([self.x+self.barrel.x,self.y+self.barrel.y],self.type.size//6,[i * (self.health/self.type.max_health) for i in self.type.color])
 
-        if self.type == damage_orb:
-            draw_circle([self.x,self.y],self.type.size,self.type.color)
-            #draw_circle([self.x,self.y],self.type.radius,self.type.damage_color,self.type.size//2)
+            if self.type == damage_orb:
+                draw_circle([self.x,self.y],self.type.size,self.type.color)
+                #draw_circle([self.x,self.y],self.type.radius,self.type.damage_color,self.type.size//2)
+        else:
+            if self.type == small_turret:
+                draw_sprite(self.x,self.y,(self.barrel.angle_to(Vector2(0,0))*-1)-90,self.type.size,self.came_from.team,self.type.images)
+
+            if self.type == damage_orb:
+                draw_sprite(self.x,self.y,(self.vel.angle_to(Vector2(0,0))*-1)-90,self.type.size,self.came_from.team,self.type.images)
+                #draw_circle([self.x,self.y],self.type.radius,self.type.damage_color,self.type.size//2)
 
 
     def collide_bullet(self,bullet) -> None:
@@ -1019,7 +1030,7 @@ class PlayerCharacter:
             if player.left > 0:
                 player.left -= 1
                 player.vel = Vector2(0,0)
-                player.timer -= 4
+                player.timer -= 6
         if self == spin_char:
             if player.left > 0:
                 if player.wait <= 0:
@@ -1212,7 +1223,6 @@ orb_char = PlayerCharacter('orb_char',40,80,3,0.8,70,(100,10,140),small_orb,150,
 #Special types
 small_turret = SpecialGroup(False,True,'small_turret')
 damage_orb = SpecialGroup(False,False,'damage_orb')
-large_sheild = SpecialGroup(False,True,'large_sheild')
 
 
 

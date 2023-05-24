@@ -250,7 +250,7 @@ def controller_barrel_rot_speed_slider_func(set_get):
         controller_barrel_rot_speed = var_min+((var_max-var_min)*set_get)
 
 
-keyboard_barrel_rot_speed = 5
+keyboard_barrel_rot_speed = 3
 def keyboard_barrel_rot_speed_slider_func(set_get):
     global keyboard_barrel_rot_speed
 
@@ -366,32 +366,32 @@ teams = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
 #Gotta love UI, right, RIGHT?
 
 #Declare box
-declare_box = Text('Nan',(None,color_pal[2]),Vector2(0,0),Vector2((1,1)),False)
-delcare_menu = Menu(screen, Vector2(sw*0.5,sh*0.9), Vector2(sw*0.5,sh),sw*0.5,sh*0.1,None,0,[declare_box],1/declare_box_fade)
+declare_box = Text('Nan',(None,color_pal[2]),(0,0),((1,1)),False)
+delcare_menu = Menu(screen, (sw*0.5,sh*0.9), (sw*0.5,sh),sw*0.5,sh*0.1,None,0,[declare_box],1/declare_box_fade)
 
 
 #Start menu
-start_button = Button('Play ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.4),Vector2(0.3,0.1),go_to_game,'press',15,text_pos=['right','center'])
-settings_button_main = Button('Options ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.7),Vector2(0.3,0.1),go_to_settings,'press',15,text_pos=['right','center'])
-char_select_button = Button('Chars ', (color_pal[1],color_pal[2]),Vector2(-0.05,0.55),Vector2(0.3,0.1),go_to_char_select,'press',15,text_pos=['right','center'])
-title_text = Text('Battle Game', (color_pal[0],color_pal[2]),Vector2(0.4,0.1),Vector2(0.4,0.2),False)
+start_button = Button('Play ', (color_pal[1],color_pal[2]),(-0.05,0.4),(0.3,0.1),go_to_game,'press',15,text_pos=['right','center'])
+settings_button_main = Button('Options ', (color_pal[1],color_pal[2]),(-0.05,0.7),(0.3,0.1),go_to_settings,'press',15,text_pos=['right','center'])
+char_select_button = Button('Chars ', (color_pal[1],color_pal[2]),(-0.05,0.55),(0.3,0.1),go_to_char_select,'press',15,text_pos=['right','center'])
+title_text = Text('Battle Game', (color_pal[0],color_pal[2]),(0.4,0.1),(0.4,0.2),False)
 
-start_menu = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[start_button,title_text,settings_button_main,char_select_button])
+start_menu = Menu(screen, (0,0), (0,sh),sw,sh,color_pal[0],0,[start_button,title_text,settings_button_main,char_select_button])
 
 
 #Character select
-add_player_button = Button('Add Player',(color_pal[1],color_pal[2]),Vector2(0.15,0.88),Vector2(0.25,0.08),add_player,'press',5)
-done_char_button = Button('Done',(color_pal[1],color_pal[2]),Vector2(0.6,0.88),Vector2(0.25,0.08),go_to_start,'press',5)
+add_player_button = Button('Add Player',(color_pal[1],color_pal[2]),(0.15,0.88),(0.25,0.08),add_player,'press',5)
+done_char_button = Button('Done',(color_pal[1],color_pal[2]),(0.6,0.88),(0.25,0.08),go_to_start,'press',5)
 
 #The player menus
 player_menu_num = 5
 player_menus = []
 for i in range(8):
-    player_menus.append(Button('Pre',(color_pal[1],color_pal[2]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.4),Vector2(0.05,0.04),pre_char,'press',5,True,True,i))
-    player_menus.append(Button('Next',(color_pal[1],color_pal[2]),Vector2((i%4)*0.2+0.225,(i//4)*0.4+0.4),Vector2(0.05,0.04),next_char,'press',5,True,True,i))
-    player_menus.append(Button('Change Team',(color_pal[1],color_pal[2]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.28),Vector2(0.15,0.04),next_team,'press',5,True,True,i))
-    player_menus.append(Text('None',(color_pal[2],color_pal[1]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.335),Vector2(0.15,0.05),False,15))
-    player_menus.append(Text('None',(color_pal[2],color_pal[1]),Vector2((i%4)*0.2+0.125,(i//4)*0.4+0.05),Vector2(0.15,0.04),False,5))
+    player_menus.append(Button('Pre',(color_pal[1],color_pal[2]),((i%4)*0.2+0.125,(i//4)*0.4+0.4),(0.05,0.04),pre_char,'press',5,True,True,i))
+    player_menus.append(Button('Next',(color_pal[1],color_pal[2]),((i%4)*0.2+0.225,(i//4)*0.4+0.4),(0.05,0.04),next_char,'press',5,True,True,i))
+    player_menus.append(Button('Change Team',(color_pal[1],color_pal[2]),((i%4)*0.2+0.125,(i//4)*0.4+0.28),(0.15,0.04),next_team,'press',5,True,True,i))
+    player_menus.append(Text('None',(color_pal[2],color_pal[1]),((i%4)*0.2+0.125,(i//4)*0.4+0.335),(0.15,0.05),False,15))
+    player_menus.append(Text('None',(color_pal[2],color_pal[1]),((i%4)*0.2+0.125,(i//4)*0.4+0.05),(0.15,0.04),False,5))
 
 char_select = Menu(screen, Vector2(0,0), Vector2(0,sh),sw,sh,color_pal[0],0,[add_player_button,done_char_button]+player_menus)
 

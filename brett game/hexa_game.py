@@ -79,7 +79,7 @@ def key_down(key: pg.key) -> bool:
 
 
 def draw_tile(tile: hexa.Tile):
-    if tile == touching or show_moves_of in tile.connections:
+    if tile == touching or show_moves_of in tile.connections or tile.selected:
         tile.render(screen, color_pal[2], color_pal[2], line_width)
     else:
         tile.render(screen, color_pal[3], color_pal[2], line_width)
@@ -100,7 +100,7 @@ def draw_tile(tile: hexa.Tile):
         )
 
     if tile.troop_num > 0:
-        if tile.troop_num == 1:
+        if tile.troop_num == 1 and tile.captain == None:
             pg.draw.circle(
                 screen,
                 player_troop_colors[tile.troop_color],
@@ -108,7 +108,7 @@ def draw_tile(tile: hexa.Tile):
                 tile_size // 5,
             )
         else:
-            for i in hexa.shape(tile.troop_num, tile_size // 2):
+            for i in hexa.shape(tile.troop_num, tile_size // 1.8):
                 pg.draw.circle(
                     screen,
                     player_troop_colors[tile.troop_color],
@@ -116,8 +116,40 @@ def draw_tile(tile: hexa.Tile):
                     tile_size // 5,
                 )
 
+    if tile.captain != None:
+        if tile.captain == "speed":
+            hexa.Tile(double_arrow, tile.screen_pos).render(
+                screen, player_troop_colors[tile.troop_color], None
+            )
+        if tile.captain == "sniper":
+            pg.draw.circle(
+                screen,
+                player_troop_colors[tile.troop_color],
+                tile.screen_pos,
+                tile_size * 0.25,
+                round(tile_size * 0.08),
+            )
+            pg.draw.line(
+                screen,
+                player_troop_colors[tile.troop_color],
+                tile.screen_pos + Vector2(0, tile_size * 0.2),
+                tile.screen_pos + Vector2(0, -tile_size * 0.2),
+                round(tile_size * 0.08),
+            )
+            pg.draw.line(
+                screen,
+                player_troop_colors[tile.troop_color],
+                tile.screen_pos + Vector2(tile_size * 0.2, 0),
+                tile.screen_pos + Vector2(-tile_size * 0.2, 0),
+                round(tile_size * 0.08),
+            )
+
 
 def update_turns():
+    global tiles, show_moves_of, builder_moves
+    show_moves_of = None
+    for i in tiles:
+        i.selected = False
     if current_action == 0:
         info_text.text = (
             "Move into enemy troops to fight them, click on a troop to move it"
@@ -134,15 +166,27 @@ def update_turns():
                 i.troop_color = turn
 
             if i.troop_color == turn:
-                i.troop_moves = 1
+                if i.captain == "speed":
+                    i.troop_moves = 2
+                else:
+                    i.troop_moves = 1
+            else:
+                i.troop_moves = 0
     if current_action == 1:
-        info_text.text = f"'F': factory for {factory_cost}, 'B': bank for {bank_cost}"
+        for n,i in enumerate(builder_moves):
+            for y,x in enumerate(i):
+                if n == turn:
+                    builder_moves[n][y] = 2
+
+        info_text.text = f"Move the builders and 'F': factory for {factory_cost}, 'B': bank for {bank_cost}"
+    if current_action == 2:
+        info_text.text = f"Create a captain for {captain_cost}: 'S' for a sniper, 'R' for a runner, 'B' for a builder"
 
 
 def move_troops(start: hexa.Tile, end: hexa.Tile):
     if end.troop_color != None:
-        end_value = end.troop_num + int(end.captain != None) * captain_value
-        start_value = start.troop_num + int(start.captain != None) * captain_value
+        end_value = value_of(end)
+        start_value = value_of(start)
         if end.troop_color == start.troop_color:
             if end.captain == None:
                 end.captain = start.captain
@@ -156,6 +200,8 @@ def move_troops(start: hexa.Tile, end: hexa.Tile):
                 min(start.troop_num + pre_end_troop_num, max_troops_per_square)
                 - pre_end_troop_num
             )
+            if start.troop_num == 0:
+                start.troop_color = None
         else:
             if end_value == start_value:
                 start.troop_moves = 0
@@ -167,6 +213,9 @@ def move_troops(start: hexa.Tile, end: hexa.Tile):
                 end.troop_color = None
                 end.captain = None
             elif start_value > end_value:
+                if end.build_color != start.troop_color:
+                    end.build = None
+                    end.build_color = None
                 end.troop_color = start.troop_color
                 if (start.captain != None) and (
                     start_value - end_value >= captain_value
@@ -182,12 +231,14 @@ def move_troops(start: hexa.Tile, end: hexa.Tile):
                 else:
                     end.captain = None
                     end.troop_num = end_value - start_value
-            start.troop_moves = 0
             start.troop_num = 0
             start.troop_color = None
             start.captain = None
 
     else:
+        if end.build_color != start.troop_color:
+            end.build = None
+            end.build_color = None
         end.troop_num = start.troop_num
         end.troop_color = start.troop_color
         end.captain = start.captain
@@ -196,10 +247,44 @@ def move_troops(start: hexa.Tile, end: hexa.Tile):
         start.captain = None
 
 
+def value_of(tile):
+    return tile.troop_num + int(tile.captain != None) * captain_value
+
+
+def damage_tile(tile: hexa.Tile, damage):
+    if value_of(tile) > damage:
+        value = value_of(tile)
+        if (tile.captain != None) and (value - damage >= captain_value):
+            tile.troop_num = value - damage - captain_value
+        else:
+            tile.captain = None
+            tile.troop_num = value - damage
+
+
+def draw_builders():
+    for n,i in enumerate(player_builders):
+        for x in i:
+            x:hexa.Tile
+            x.render(screen,None,player_troop_colors[n],line_width)
+
+
+def check_builders():
+    for n,i in enumerate(player_builders):
+        for y,x in enumerate(i):
+            x:hexa.Tile
+            if n != x.troop_color and x.troop_color != None:
+                del player_builders[n][y]
+
+
+
 pg.init()
-sw = 1600
-sh = 900
-screen = pg.display.set_mode((sw, sh))
+# sw = 1600
+# sh = 900
+# screen = pg.display.set_mode((sw, sh))
+sw = 1920
+sh = 1080
+screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
+
 fps = 60
 fps_clock = pg.time.Clock()
 
@@ -224,12 +309,10 @@ tiles[floor(gh / 2) * gw].build_color = 0
 tiles[floor(gh / 2) * gw + gw - 1].build = "base"
 tiles[floor(gh / 2) * gw + gw - 1].build_color = 1
 
+player_builders = [[tiles[floor(gh / 2) * gw + 1]],[tiles[floor(gh / 2) * gw - 2]]]
+builder_moves = [[0],[0]]
 
-tiles[50].troop_num = 2
-tiles[50].troop_color = 1
 
-tiles[76].troop_num = 4
-tiles[76].troop_color = 0
 
 
 player_squares = [0, 0]
@@ -238,15 +321,19 @@ octagon = hexa.shape(8, tile_size // 2, True)
 triangle = hexa.shape(3, tile_size // 2)
 hexagon = hexa.shape(6, tile_size // 2)
 square = hexa.shape(4, tile_size // 2, True)
+double_arrow = ((-1, 1), (-1, -1), (0, 0), (0, -1), (1, 0), (0, 1), (0, 0))
+double_arrow = [Vector2(i) * tile_size * 0.25 for i in double_arrow]
 
 
 max_troops_per_square = 5
 captain_value = 4
 factory_cost = 4
-bank_cost = 8
+bank_cost = 9
+captain_cost = 5
 base_square_gen = 3
+sniper_damage = 3
 
-action_order = ("Move Troops", "Build", "Use special buildings")
+action_order = ("Move Troops", "Build", "Use specials")
 
 current_action = 0
 
@@ -304,6 +391,8 @@ while running:
 
     for i in tiles:
         draw_tile(i)
+    
+    draw_builders()
 
     counter_menu.full_update(events)
 
@@ -315,7 +404,7 @@ while running:
             if current_action == 0:
                 if show_moves_of == None:
                     if (
-                        touching.troop_num > 0
+                        value_of(touching) > 0
                         and touching.troop_color == turn
                         and touching.troop_moves > 0
                     ):
@@ -324,28 +413,95 @@ while running:
                     if not show_moves_of == touching:
                         if show_moves_of in touching.connections:
                             move_troops(show_moves_of, touching)
-                            touching.troop_moves = show_moves_of.troop_moves
-                            show_moves_of.troop_moves = 0
-                            touching.troop_moves -= 1
-                            show_moves_of = None
-                        else:
-                            show_moves_of = None
+                            touching.troop_moves = show_moves_of.troop_moves - 1
+                        show_moves_of = None
+            
+            elif current_action == 1:
+                if show_moves_of != None:
+                    other_builder = False
+                    for i in player_builders:
+                        for x in i:
+                            if x == touching:
+                                other_builder = True
+                    if (show_moves_of in touching.connections) and (touching.troop_color == turn or touching.troop_color == None) and (touching.build_color == turn or touching.build_color == None) and (not other_builder):
+                        num = player_builders[turn].index(show_moves_of)
+                        player_builders[turn][num] = touching
+                        builder_moves[turn][num] -= 1
+                    show_moves_of = None
 
-        if key_press("f"):
-            if current_action == 1:
-                if any([i.build_color == turn for i in touching.connections]):
-                    if player_squares[turn] >= factory_cost:
-                        touching.build = "factory"
-                        touching.build_color = turn
-                        player_squares[turn] -= factory_cost
+                if touching in player_builders[turn]:
+                    if builder_moves[turn][player_builders[turn].index(touching)] > 0:
+                        show_moves_of = touching
+            
+            elif current_action == 2:
+                if touching.selected:
+                    for i in tiles:
+                        i.selected = False
+                    if value_of(touching) <= sniper_damage:
+                        touching.troop_color = None
+                        touching.troop_num = 0
+                        touching.captain = None
+                        touching.troop_moves = 0
+                    else:
+                        damage_tile(touching, sniper_damage)
+                else:
+                    if touching.captain == "sniper" and touching.troop_color == turn:
+                        for i in tiles:
+                            if (i.troop_color != turn) and (i.troop_color != None):
+                                i.selected = True
+                    else:
+                        for i in tiles:
+                            i.selected = False
 
-        if key_press("b"):
+
+        if touching.build == None:
             if current_action == 1:
-                if any([i.build_color == turn for i in touching.connections]):
-                    if player_squares[turn] >= bank_cost:
-                        touching.build = "bank"
-                        touching.build_color = turn
-                        player_squares[turn] -= bank_cost
+                if touching.troop_color == None or touching.troop_color == turn:
+                    if key_press("f"):
+                        if touching in player_builders[turn]:
+                            if player_squares[turn] >= factory_cost:
+                                touching.build = "factory"
+                                touching.build_color = turn
+                                player_squares[turn] -= factory_cost
+
+                    if key_press("b"):
+                        if touching in player_builders[turn]:
+                            if player_squares[turn] >= bank_cost:
+                                touching.build = "bank"
+                                touching.build_color = turn
+                                player_squares[turn] -= bank_cost
+        
+        if touching.troop_color == turn and touching.troop_num == max_troops_per_square and player_squares[turn] >= captain_cost:
+            if touching.captain == None:
+                if key_press('s'):
+                    touching.troop_num = 0
+                    touching.captain = 'sniper'
+                    player_squares[turn] -= captain_cost
+                if key_press('r'):
+                    touching.troop_num = 0
+                    touching.captain = 'speed'
+                    player_squares[turn] -= captain_cost
+            
+            if key_press('b'):
+                has_builder = False
+                for i in player_builders:
+                    for x in i:
+                        if x == touching:
+                            has_builder = True
+                if not has_builder:
+                    touching.troop_num = 0
+                    player_builders[turn].append(touching)
+                    builder_moves[turn].append(0)
+                    player_squares[turn] -= captain_cost
+
+        
+        
+        
+        if current_action == 2:
+            pass
+            #if key_press()
+
+    check_builders()
 
     if key_press("d"):
         current_action += 1

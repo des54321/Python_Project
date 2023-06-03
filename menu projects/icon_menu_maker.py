@@ -1,6 +1,79 @@
 import pygame
 from random import random
 import math
+
+
+def key_down(key: pygame.key) -> bool:
+    return pygame.key.get_pressed()[key]
+
+pressed_letters = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+    "COMMA",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "0",
+]
+pressed = []
+last = []
+
+
+for i in pressed_letters:
+    pressed.append(False)
+    last.append(False)
+
+
+def update_pressed():
+    global last
+    global pressed
+    global pressed_letters
+    for x, i in enumerate(pressed_letters):
+        test = eval("pygame.K_" + i)
+        press = key_down(test)
+        if press and (not last[x]):
+            pressed[x] = True
+        else:
+            pressed[x] = False
+        if press:
+            last[x] = True
+        else:
+            last[x] = False
+
+
+def key_press(key: str):
+    return pressed[pressed_letters.index(key)]
+
 p = []
 snap = 20
 screen_width = 800
@@ -52,9 +125,15 @@ while running:
         else:   
             pygame.draw.line(screen,(128,128,128),[0,(screen_height/snap)*i],[screen_width,(screen_height/snap)*i],line_width)
     if len(p) > 2: 
-        pygame.draw.polygon(screen, (255,255,255), p)
+        if key_down(pygame.K_e):
+            pygame.draw.polygon(screen,(255,255,255),p,10)
+        else:
+            pygame.draw.polygon(screen, (255,255,255), p)
     elif len == 2:
         pygame.draw.line(screen,(255,255,255),p[0],p[1],line_width)
+    if key_press('z'):
+        p.pop()
+    update_pressed()
     pygame.display.update()
     fpsClock.tick(FPS)
 pygame.quit()

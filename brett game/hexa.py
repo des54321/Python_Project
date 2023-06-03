@@ -12,13 +12,14 @@ class Tile:
         self.screen_pos = screen_pos
         self.connections = []
         self.connect_type = []
-        self.build = "blank"
+        self.build = None
         self.build_color = None
         self.uses = 0
         self.troop_color = None
         self.troop_num = 0
         self.troop_moves = 0
         self.captain = None
+        self.selected = False
 
     def add_connection(self, other, type):
         self.connections.append(other)

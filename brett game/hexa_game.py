@@ -189,7 +189,7 @@ def update_turns():
             if i.captain == "sniper" and i.troop_color == turn:
                 i.moves_left = 1
 
-        info_text.text = f"Create a captain for {captain_cost}: 'S' for a sniper, 'R' for a runner, 'B' for a builder"
+        info_text.text = "None"
 
 
 def move_troops(start: hexa.Tile, end: hexa.Tile):
@@ -322,8 +322,8 @@ builder_moves = [[0], [0]]
 
 
 kind_selected = 0
-kind_buildings = ["factory", "bank"]
-captains = ['sniper','speed','builder']
+kind_buildings = [None, "factory", "bank"]
+captains = [None,"sniper", "speed", "builder"]
 
 starting_squares = 10
 player_squares = [starting_squares, starting_squares]
@@ -340,9 +340,10 @@ max_troops_per_square = 5
 captain_value = 4
 captain_cost = 5
 base_square_gen = 3
-sniper_damage = 3
+sniper_damage = 2
+sniper_range = 3.5
 
-build_costs = [5, 9]
+build_costs = [0, 5, 9]
 
 first_mouse = [False, False, False]
 mouse = [False, False, False]
@@ -416,6 +417,13 @@ while running:
     p1_square_counter.text = f"Player 1 squares: {player_squares[0]}"
     p2_square_counter.text = f"Player 2 squares: {player_squares[1]}"
 
+    if current_action == 0:
+        pass
+    if current_action == 1:
+        info_text.text = f"Building: {kind_buildings[kind_selected]} for {build_costs[kind_selected]}"
+    if current_action == 2:
+        info_text.text = f"Creating: {captains[kind_selected]} for {captain_cost}"
+
     if not touching == None:
         if mouse[0]:
             if current_action == 0:
@@ -460,83 +468,76 @@ while running:
                         show_moves_of = touching
 
             elif current_action == 2:
-                if touching.selected:
-                    for i in tiles:
-                        i.selected = False
-                    using.moves_left -= 1
-                    if value_of(touching) <= sniper_damage:
-                        touching.troop_color = None
-                        touching.troop_num = 0
-                        touching.captain = None
-                        touching.moves_left = 0
-                    else:
-                        damage_tile(touching, sniper_damage)
-                else:
-                    if touching.captain == "sniper" and touching.troop_color == turn:
-                        if touching.moves_left > 0 and first_mouse[0]:
-                            using = touching
-                            for i in tiles:
-                                if (i.troop_color != turn) and (i.troop_color != None):
-                                    i.selected = True
-                    else:
+                if kind_selected == 0:
+                    if touching.selected:
                         for i in tiles:
                             i.selected = False
+                        using.moves_left -= 1
+                        if value_of(touching) <= sniper_damage:
+                            touching.troop_color = None
+                            touching.troop_num = 0
+                            touching.captain = None
+                            touching.moves_left = 0
+                        else:
+                            damage_tile(touching, sniper_damage)
+                    else:
+                        if touching.captain == "sniper" and touching.troop_color == turn:
+                            if touching.moves_left > 0 and first_mouse[0]:
+                                using = touching
+                                for i in tiles:
+                                    i:hexa.Tile
+                                    if (i.troop_color != turn) and (i.troop_color != None) and (i.screen_pos.distance_to(touching.screen_pos)/tile_size < sniper_range):
+                                        i.selected = True
+                                    else:
+                                        i.selected = False
+                        else:
+                            for i in tiles:
+                                i.selected = False
+                else:
+                    if (
+                        touching.troop_color == turn
+                        and touching.troop_num == max_troops_per_square
+                        and player_squares[turn] >= captain_cost
+                    ):
+                        if captains[kind_selected] == "builder":
+                            has_builder = False
+                            for i in player_builders:
+                                for x in i:
+                                    if x == touching:
+                                        has_builder = True
+                            if not has_builder:
+                                touching.troop_num = 0
+                                player_builders[turn].append(touching)
+                                builder_moves[turn].append(0)
+                                player_squares[turn] -= captain_cost
+                        else:
+                            if touching.captain == None:
+                                touching.troop_num = 0
+                                touching.captain = captains[kind_selected]
+                                player_squares[turn] -= captain_cost
 
         if touching.build == None:
             if current_action == 1:
-                if touching.troop_color == None or touching.troop_color == turn:
-                    if key_press("f"):
-                        if touching in player_builders[turn]:
-                            if player_squares[turn] >= build_costs[0]:
-                                touching.build = "factory"
-                                touching.build_color = turn
-                                player_squares[turn] -= build_costs[0]
+                if (touching.troop_color == None or touching.troop_color == turn) and kind_selected != 0:
+                    if touching in player_builders[turn]:
+                        if player_squares[turn] >= build_costs[kind_selected]:
+                            touching.build = kind_buildings[kind_selected]
+                            touching.build_color = turn
+                            player_squares[turn] -= build_costs[kind_selected]
 
-                    if key_press("b"):
-                        if touching in player_builders[turn]:
-                            if player_squares[turn] >= build_costs[1]:
-                                touching.build = "bank"
-                                touching.build_color = turn
-                                player_squares[turn] -= build_costs[1]
-
-        if (
-            touching.troop_color == turn
-            and touching.troop_num == max_troops_per_square
-            and player_squares[turn] >= captain_cost
-            and current_action == 2
-        ):
-            if touching.captain == None:
-                if key_press("s"):
-                    touching.troop_num = 0
-                    touching.captain = "sniper"
-                    player_squares[turn] -= captain_cost
-                if key_press("r"):
-                    touching.troop_num = 0
-                    touching.captain = "speed"
-                    player_squares[turn] -= captain_cost
-
-            if key_press("b"):
-                has_builder = False
-                for i in player_builders:
-                    for x in i:
-                        if x == touching:
-                            has_builder = True
-                if not has_builder:
-                    touching.troop_num = 0
-                    player_builders[turn].append(touching)
-                    builder_moves[turn].append(0)
-                    player_squares[turn] -= captain_cost
+        
 
     check_builders()
 
     if key_press("d") or first_mouse[2]:
+        kind_selected = 0
         current_action += 1
         if current_action >= len(action_order):
             turn += 1
             turn %= len(player_build_colors)
             current_action = 0
         update_turns()
-    
+
     if first_mouse[1]:
         kind_selected += 1
         if current_action == 1:

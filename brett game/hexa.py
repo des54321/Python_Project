@@ -17,7 +17,7 @@ class Tile:
         self.uses = 0
         self.troop_color = None
         self.troop_num = 0
-        self.troop_moves = 0
+        self.moves_left = 0
         self.captain = None
         self.selected = False
 

@@ -242,6 +242,14 @@ class Menu:
                     return True
         return False
 
+    def new_contents(self,new):
+        self.contents = new
+        for i in self.contents:
+            i.menu = self
+
+        self.update()
+
+
 
 class Button:
     def __init__(
@@ -318,7 +326,8 @@ class Button:
 
     def render(self):
         if self.show:
-            if type(self.icon) == str:
+            if type(self.icon) != list or type(self.icon) != tuple:
+                self.icon = str(self.icon)
                 draw_text_box(
                     self.menu.screen,
                     self.scr_rect(),
@@ -429,7 +438,8 @@ class Slider:
     def render(self):
         if self.show:
             # Box
-            if type(self.icon) == str:
+            if type(self.icon) != list or type(self.icon) != tuple:
+                self.icon = str(self.icon)
                 draw.rect(
                     self.menu.screen,
                     self.colors[0],

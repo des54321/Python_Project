@@ -146,7 +146,7 @@ def draw_tile(tile: hexa.Tile):
 
 
 def update_turns():
-    global tiles, show_moves_of, builder_moves
+    global tiles, show_moves_of, builder_moves, kind_selected
     show_moves_of = None
     for i in tiles:
         i.selected = False
@@ -156,9 +156,9 @@ def update_turns():
         if i.build == None:
             i.build_color = None
     if current_action == 0:
-        info_text.text = (
-            "Move into enemy troops to fight them, click on a troop to move it"
-        )
+        kind_selected = None
+        new = [action_text, done_button]
+        action_menu.new_contents(new)
         bank_num = 0
         for i in tiles:
             if i.build_color == turn and i.build == "bank":
@@ -178,18 +178,51 @@ def update_turns():
             else:
                 i.moves_left = 0
     if current_action == 1:
+        kind_selected = [None, 0]
+        new = [action_text, done_button]
+        for n, i in enumerate(buildings):
+            new.append(
+                Button(
+                    i[0],
+                    (color_pal[1], color_pal[2]),
+                    (n * 0.13 + 0.03, 0.35),
+                    (0.1, 0.3),
+                    new_kind_selected,
+                    "press",
+                    5,
+                    True,
+                    True,
+                    i,
+                )
+            )
+        action_menu.new_contents(new)
         for n, i in enumerate(builder_moves):
             for y, x in enumerate(i):
                 if n == turn:
                     builder_moves[n][y] = 2
 
-        info_text.text = None
     if current_action == 2:
+        kind_selected = None
+        new = [action_text, done_button]
+        for n, i in enumerate(captains):
+            new.append(
+                Button(
+                    i,
+                    (color_pal[1], color_pal[2]),
+                    (n * 0.13 + 0.03, 0.35),
+                    (0.1, 0.3),
+                    new_kind_selected,
+                    "press",
+                    5,
+                    True,
+                    True,
+                    i,
+                )
+            )
+        action_menu.new_contents(new)
         for i in tiles:
             if i.captain == "sniper" and i.troop_color == turn:
                 i.moves_left = 1
-
-        info_text.text = "None"
 
 
 def move_troops(start: hexa.Tile, end: hexa.Tile):
@@ -286,14 +319,18 @@ def check_builders():
 
 
 def next_action():
-    global kind_buildings, kind_selected, turn, current_action
-    kind_selected = 0
+    global buildings, kind_selected, turn, current_action
     current_action += 1
     if current_action >= len(action_order):
         turn += 1
         turn %= len(player_build_colors)
         current_action = 0
     update_turns()
+
+
+def new_kind_selected(new):
+    global kind_selected
+    kind_selected = new
 
 
 pg.init()
@@ -308,7 +345,13 @@ fps = 60
 fps_clock = pg.time.Clock()
 
 
-color_pal = ((255, 212, 212), (105, 105, 155), (205, 233, 144), (170, 203, 115))
+color_pal = (
+    (255, 212, 212),
+    (105, 105, 155),
+    (205, 233, 144),
+    (170, 203, 115),
+    (150, 150, 230),
+)
 
 player_build_colors = ("#E62C5E", "#FEDB39")
 player_troop_colors = ("#B6132E", "#EECB19")
@@ -332,11 +375,12 @@ player_builders = [
     [tiles[floor(gh / 2) * gw + 1]],
     [tiles[floor(gh / 2) * gw - 2 + gw]],
 ]
+
 builder_moves = [[0], [0]]
 
 
-kind_selected = 0
-kind_buildings = [None, "factory", "bank"]
+kind_selected = None
+buildings = [[None, 0], ["factory", 5], ["bank", 9]]
 captains = [None, "sniper", "speed", "builder"]
 
 base_square_gen = 3
@@ -357,7 +401,6 @@ captain_cost = 5
 sniper_damage = 2
 sniper_range = 5.1
 
-build_costs = [0, 5, 9]
 
 first_mouse = [False, False, False]
 mouse = [False, False, False]
@@ -374,33 +417,58 @@ turn = 0
 p1_square_counter = Text(
     f"{player_squares[0]}",
     (None, player_build_colors[0]),
-    (0.02, 0.75),
-    (0.2, 0.2),
+    (0.02, 0.3),
+    (0.2, 0.4),
     False,
     text_pos=["left", "center"],
 )
 p2_square_counter = Text(
     f"Player 2 squares: {player_squares[1]}",
     (None, player_build_colors[1]),
-    (0.78, 0.75),
-    (0.2, 0.2),
+    (0.78, 0.3),
+    (0.2, 0.4),
     False,
     text_pos=["right", "center"],
 )
-action_text = Text("None", (None, color_pal[0]), (0.4, 0.015), (0.2, 0.05), False)
-
-info_text = Text("None", (None, color_pal[0]), (0.4, 0.94), (0.2, 0.05), False)
 
 
 counter_menu = Menu(
     screen,
-    (0, 0),
-    (0, 0),
+    (0, sh / 2),
+    (0, sh / 2),
     sw,
-    sh,
+    sh / 2,
     None,
     0,
-    [p1_square_counter, p2_square_counter, action_text, info_text],
+    [p1_square_counter, p2_square_counter],
+)
+
+
+menu_size = sh * 0.2
+
+action_text = Text("None", (None, color_pal[0]), (0.4, 0.015), (0.2, 0.2), False)
+done_button = Button(
+    "Done",
+    (color_pal[0], color_pal[1]),
+    (0.78, 0.4),
+    (0.2, 0.3),
+    next_action,
+    "press",
+    5,
+)
+
+
+action_menu = Menu(
+    screen,
+    (0, 0),
+    (0, -menu_size),
+    sw,
+    menu_size,
+    color_pal[4],
+    25,
+    [action_text, done_button],
+    1,
+    (False, False, True, True),
 )
 
 update_turns()
@@ -427,16 +495,10 @@ while running:
     draw_builders()
 
     counter_menu.full_update(events)
+    action_menu.full_update(events)
 
     p1_square_counter.text = f"{player_squares[0]}"
     p2_square_counter.text = f"{player_squares[1]}"
-
-    if current_action == 0:
-        pass
-    if current_action == 1:
-        info_text.text = f"Building: {kind_buildings[kind_selected]} for {build_costs[kind_selected]}"
-    if current_action == 2:
-        info_text.text = f"Creating: {captains[kind_selected]} for {captain_cost}"
 
     if not touching == None:
         if mouse[0]:
@@ -482,7 +544,7 @@ while running:
                         show_moves_of = touching
 
             elif current_action == 2:
-                if kind_selected == 0:
+                if kind_selected == None:
                     if touching.selected:
                         for i in tiles:
                             i.selected = False
@@ -526,7 +588,7 @@ while running:
                         and touching.troop_num == max_troops_per_square
                         and player_squares[turn] >= captain_cost
                     ):
-                        if captains[kind_selected] == "builder":
+                        if kind_selected == "builder":
                             has_builder = False
                             for i in player_builders:
                                 for x in i:
@@ -540,31 +602,24 @@ while running:
                         else:
                             if touching.captain == None:
                                 touching.troop_num = 0
-                                touching.captain = captains[kind_selected]
+                                touching.captain = kind_selected
                                 player_squares[turn] -= captain_cost
 
         if touching.build == None:
             if current_action == 1:
                 if (
                     touching.troop_color == None or touching.troop_color == turn
-                ) and kind_selected != 0:
+                ) and kind_selected != None:
                     if touching in player_builders[turn]:
-                        if player_squares[turn] >= build_costs[kind_selected]:
-                            touching.build = kind_buildings[kind_selected]
+                        if player_squares[turn] >= kind_selected[1]:
+                            touching.build = kind_selected[0]
                             touching.build_color = turn
-                            player_squares[turn] -= build_costs[kind_selected]
+                            player_squares[turn] -= kind_selected[1]
 
     check_builders()
 
     if key_press("d"):
         next_action()
-
-    if first_mouse[1]:
-        kind_selected += 1
-        if current_action == 1:
-            kind_selected %= len(build_costs)
-        if current_action == 2:
-            kind_selected %= len(captains)
 
     action_text.text = f"Player {turn+1} {action_order[current_action]}"
 

@@ -20,9 +20,9 @@ class ColorLerp:
     
     
     def get(self, index):
-        if len(self.colors) == 1 or index == 0:
+        if len(self.colors) == 1 or index <= 0:
             return self.colors[0]
-        elif index == 1:
+        elif index >= 1:
             return self.colors[-1]
         else:
             between = 0

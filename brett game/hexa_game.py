@@ -285,29 +285,40 @@ def check_builders():
                 del player_builders[n][y]
 
 
+def next_action():
+    global kind_buildings, kind_selected, turn, current_action
+    kind_selected = 0
+    current_action += 1
+    if current_action >= len(action_order):
+        turn += 1
+        turn %= len(player_build_colors)
+        current_action = 0
+    update_turns()
+
+
 pg.init()
-sw = 1600
-sh = 900
-screen = pg.display.set_mode((sw, sh))
-# sw = 1920
-# sh = 1080
-# screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
+# sw = 1600
+# sh = 900
+# screen = pg.display.set_mode((sw, sh))
+sw = 1920
+sh = 1080
+screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
 
 fps = 60
 fps_clock = pg.time.Clock()
 
 
-color_pal = ((255, 212, 212), (115, 120, 170), (205, 233, 144), (170, 203, 115))
+color_pal = ((255, 212, 212), (105, 105, 155), (205, 233, 144), (170, 203, 115))
 
-player_build_colors = ("#D61C4E", "#FEDB39")
+player_build_colors = ("#E62C5E", "#FEDB39")
 player_troop_colors = ("#B6132E", "#EECB19")
 
 
 gw = 15
 gh = 7
-tile_size = sh * 0.0666
+tile_size = sh * 0.0566
 line_width = round(sh * 0.00666)
-tiles = hexa.hex_grid_l(gw, gh, tile_size, (sw / 2, sh / 2))
+tiles = hexa.hex_grid_l(gw, gh, tile_size, (sw / 2, sh / 1.7))
 
 
 tiles[floor(gh / 2) * gw].build = "base"
@@ -317,16 +328,20 @@ tiles[floor(gh / 2) * gw].build_color = 0
 tiles[floor(gh / 2) * gw + gw - 1].build = "base"
 tiles[floor(gh / 2) * gw + gw - 1].build_color = 1
 
-player_builders = [[tiles[floor(gh / 2) * gw + 1]], [tiles[floor(gh / 2) * gw - 2]]]
+player_builders = [
+    [tiles[floor(gh / 2) * gw + 1]],
+    [tiles[floor(gh / 2) * gw - 2 + gw]],
+]
 builder_moves = [[0], [0]]
 
 
 kind_selected = 0
 kind_buildings = [None, "factory", "bank"]
-captains = [None,"sniper", "speed", "builder"]
+captains = [None, "sniper", "speed", "builder"]
 
+base_square_gen = 3
 starting_squares = 10
-player_squares = [starting_squares, starting_squares]
+player_squares = [starting_squares - base_square_gen, starting_squares]
 
 octagon = hexa.shape(8, tile_size // 2, True)
 triangle = hexa.shape(3, tile_size // 2)
@@ -339,9 +354,8 @@ double_arrow = [Vector2(i) * tile_size * 0.25 for i in double_arrow]
 max_troops_per_square = 5
 captain_value = 4
 captain_cost = 5
-base_square_gen = 3
 sniper_damage = 2
-sniper_range = 3.5
+sniper_range = 5.1
 
 build_costs = [0, 5, 9]
 
@@ -358,18 +372,18 @@ turn = 0
 
 # Menus
 p1_square_counter = Text(
-    f"Player 1 squares: {player_squares[0]}",
+    f"{player_squares[0]}",
     (None, player_build_colors[0]),
-    (0.02, 0.015),
-    (0.2, 0.05),
+    (0.02, 0.75),
+    (0.2, 0.2),
     False,
     text_pos=["left", "center"],
 )
 p2_square_counter = Text(
     f"Player 2 squares: {player_squares[1]}",
     (None, player_build_colors[1]),
-    (0.78, 0.015),
-    (0.2, 0.05),
+    (0.78, 0.75),
+    (0.2, 0.2),
     False,
     text_pos=["right", "center"],
 )
@@ -414,8 +428,8 @@ while running:
 
     counter_menu.full_update(events)
 
-    p1_square_counter.text = f"Player 1 squares: {player_squares[0]}"
-    p2_square_counter.text = f"Player 2 squares: {player_squares[1]}"
+    p1_square_counter.text = f"{player_squares[0]}"
+    p2_square_counter.text = f"{player_squares[1]}"
 
     if current_action == 0:
         pass
@@ -481,12 +495,25 @@ while running:
                         else:
                             damage_tile(touching, sniper_damage)
                     else:
-                        if touching.captain == "sniper" and touching.troop_color == turn:
+                        if (
+                            touching.captain == "sniper"
+                            and touching.troop_color == turn
+                        ):
                             if touching.moves_left > 0 and first_mouse[0]:
                                 using = touching
                                 for i in tiles:
-                                    i:hexa.Tile
-                                    if (i.troop_color != turn) and (i.troop_color != None) and (i.screen_pos.distance_to(touching.screen_pos)/tile_size < sniper_range):
+                                    i: hexa.Tile
+                                    if (
+                                        (i.troop_color != turn)
+                                        and (i.troop_color != None)
+                                        and (
+                                            i.screen_pos.distance_to(
+                                                touching.screen_pos
+                                            )
+                                            / tile_size
+                                            < sniper_range
+                                        )
+                                    ):
                                         i.selected = True
                                     else:
                                         i.selected = False
@@ -518,25 +545,19 @@ while running:
 
         if touching.build == None:
             if current_action == 1:
-                if (touching.troop_color == None or touching.troop_color == turn) and kind_selected != 0:
+                if (
+                    touching.troop_color == None or touching.troop_color == turn
+                ) and kind_selected != 0:
                     if touching in player_builders[turn]:
                         if player_squares[turn] >= build_costs[kind_selected]:
                             touching.build = kind_buildings[kind_selected]
                             touching.build_color = turn
                             player_squares[turn] -= build_costs[kind_selected]
 
-        
-
     check_builders()
 
-    if key_press("d") or first_mouse[2]:
-        kind_selected = 0
-        current_action += 1
-        if current_action >= len(action_order):
-            turn += 1
-            turn %= len(player_build_colors)
-            current_action = 0
-        update_turns()
+    if key_press("d"):
+        next_action()
 
     if first_mouse[1]:
         kind_selected += 1

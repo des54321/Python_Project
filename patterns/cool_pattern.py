@@ -97,7 +97,7 @@ def do_pattern(below = 0):
 #     pattern.append([i+1,0])
 
 # pattern = []
-# amount = 2
+# amount = 4
 # for i in range(amount):
 #     if i%2 == 1:
 #         pattern.append([0,i])
@@ -114,16 +114,17 @@ def do_pattern(below = 0):
 
 
 pattern = []
-amount = 3
+amount = 4
 for i in range(amount):
     pattern.append([-1,i])
     pattern.append([1,i])
 
 
 
-#pattern = [[0, 0], [-3, 3], [-3, 1], [-3, 2], [-2, 1], [2, 2]]
-#pattern = [[0,2],[-1,0],[1,0]]
-#pattern = [[2, 2], [-1, 0], [2, 1], [1, 0], [-1, 0]]
+# pattern = [[0, 0], [-3, 3], [-3, 1], [-3, 2], [-2, 1], [2, 2]]
+# pattern = [[0,2],[-1,0],[1,0]]
+# pattern = [[2, 2], [-1, 0], [2, 1], [1, 0], [-1, 0]]
+# pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
 
 
 multi = [1 for _ in range(len(pattern))]

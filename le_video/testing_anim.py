@@ -1,18 +1,7 @@
+import pygame as pg
+import anim
+from anim import *
 
-def key_down(key : pg.key) -> bool:
-    return pg.key.get_pressed()[key]
-
-def draw_circle(pos,size,color):
-    pg.draw.circle(screen,color,(pos[0]+(sw/2),sh-(pos[1]+(sh/2))),round(size))
-
-def draw_rect(pos,width,height,color):
-    pg.draw.rect(screen,color,pg.Rect(pos[0]+(sw/2),sh-(pos[1]+(sh/2)),width,height))
-
-def draw_line(pos1,pos2,size,color):
-    pg.draw.line(screen,color,(pos1[0]+(sw/2),sh-(pos1[1]+(sh/2))),(pos2[0]+(sw/2),sh-(pos2[1]+(sh/2))),round(size))
-
-def get_m_pos():
-    return [pg.mouse.get_pos()[0]-(sw/2),sh-(pg.mouse.get_pos()[1]+(sh/2))]
 
 pressed_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
 pressed = []
@@ -44,21 +33,53 @@ def key_press(key: str):
     return pressed[pressed_letters.index(key)]
 
 
+def key_down(key: pg.key) -> bool:
+    return pg.key.get_pressed()[key]
+
+
+
+
+
 
 pg.init()
-sw = 1000
-sh = 600
+sw = 1600
+sh = 900
 screen = pg.display.set_mode((sw,sh))
+
+circle_dist = 40
+sqrt_3 = 0.866
+trih = 20
+delay = 0.03
+duration = 0.6
+
+points = []
+renders = []
+for y in range(trih):
+    for x in range(y+1):
+        renders.append(Render('circle',
+                              Color((y+x)*delay,duration,[(50,220,220),(120,240,120)],power='sine'),
+                              EaseValue((y+x)*delay,duration,0,15,'sine'),
+                              EasePoint((y+x)*delay,duration,(400,0),(x*circle_dist-y*circle_dist*0.5,circle_dist*sqrt_3*trih*0.5-y*circle_dist*sqrt_3),'sine')))
+
+
+anim = Anim(renders,screen)
+
+
 fps = 60
 fps_clock = pg.time.Clock()
 running = True
 while running:
-    for event in pg.event.get():
+    events = pg.event.get()
+    for event in events:
         if event.type == pg.QUIT:
             running = False
 
     
     update_pressed()
+    screen.fill((20,30,15))
+    anim.step(1/fps*(int(pg.mouse.get_pressed()[0])*-4+1))
+    anim.render()
+
     pg.display.update()
     fps_clock.tick(fps)
 pg.quit()

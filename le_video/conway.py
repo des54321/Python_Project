@@ -97,6 +97,7 @@ def do_grid():
 anim_delay = 0.4
 
 anim = Anim(renders,screen)
+pg.mouse.set_visible(False)
 last_step = 4
 first = True
 

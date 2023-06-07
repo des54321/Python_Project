@@ -42,9 +42,9 @@ def key_down(key: pg.key) -> bool:
 
 
 pg.init()
-sw = 1600
-sh = 900
-screen = pg.display.set_mode((sw,sh))
+sw = 1920
+sh = 1080
+screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
 
 circle_dist = 40
 sqrt_3 = 0.866
@@ -79,6 +79,8 @@ while running:
     screen.fill((20,30,15))
     anim.step(1/fps*(int(pg.mouse.get_pressed()[0])*-4+1))
     anim.render()
+    if key_down(pg.K_BACKSPACE):
+        running = False
 
     pg.display.update()
     fps_clock.tick(fps)

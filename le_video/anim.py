@@ -101,6 +101,7 @@ class Render:
         self.p1 = p1
         self.p2 = p2
         self.size = size
+        self.anim = None
     
     def render(self,t):
         if type(self.p1) == EasePoint:
@@ -123,3 +124,7 @@ class Render:
             draw_line(self.anim.screen,color,p1,p2,round(size))
         if self.type == 'circle':
             draw_circle(self.anim.screen,color,p1,round(size))
+    
+
+    def fade_to(self,new_color,duration,power):
+        self.color = Color(self.anim.t,duration,(self.color.get(self.anim.t),new_color),power)

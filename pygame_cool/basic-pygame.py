@@ -3,28 +3,28 @@ import pygame as pg
 
 pressed_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
 pressed = []
-last = []
+last_letters = []
 
 for i in pressed_letters:
     pressed.append(False)
-    last.append(False)
+    last_letters.append(False)
 
 
 def update_pressed():
-    global last
+    global last_letters
     global pressed
     global pressed_letters
     for x, i in enumerate(pressed_letters):
         test = eval('pg.K_' + i)
         press = key_down(test)
-        if press and (not last[x]):
+        if press and (not last_letters[x]):
             pressed[x] = True
         else:
             pressed[x] = False
         if press:
-            last[x] = True
+            last_letters[x] = True
         else:
-            last[x] = False
+            last_letters[x] = False
 
 
 def key_press(key: str):

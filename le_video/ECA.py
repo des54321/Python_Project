@@ -65,9 +65,8 @@ for i in range(length):
 
 
 anim = Anim(renders,screen)
-lines = []
 
-was_drawing = False
+
 fps = 60
 fps_clock = pg.time.Clock()
 running = True
@@ -75,17 +74,38 @@ while running:
     if pg.mouse.get_pressed()[2]:
         for i in renders:
             if i.p1.get(anim.t).distance_to(get_m_pos()) < circle_size:
-                i.color = (120,240,120)
-    if pg.mouse.get_pressed()[0]:
-        touch = False
-        for i in renders:
-            if i.p1.get(anim.t).distance_to(get_m_pos()) < circle_size:
+                i.color = (120,240,120)\
+    
+    touch = False
+    
+    for i in renders:
+        if i.p1.get(anim.t).distance_to(get_m_pos()) < circle_size:
+            if pg.mouse.get_pressed()[0]:
                 i.color = (100,120,240)
-                touch = True
-        if not touch:
-            pen.update_lines()
-    else:
-        was_drawing = False
+            touch = True
+            pen.was_drawing = False
+            pen.last_dir = None
+    
+    if not touch:
+        pen.update_lines(5)
+    
+    if key_press('s'):
+        pen.was_drawing = False
+        pen.last_dir = None
+        pen.lines.append([])
+        circle_res = 30
+        for i in range(circle_res+1):
+            new = Vector2()
+            new.from_polar((25,i*360/circle_res))
+            new.y *= 1.6
+            pen.lines[-1].append(new+Vector2(pg.mouse.get_pos()))
+    
+    if key_press('a'):
+        pen.was_drawing = False
+        pen.last_dir = None
+        pos = pg.mouse.get_pos()
+        pen.lines.append([[pos[0],pos[1]+40],[pos[0],pos[1]-40]])
+    
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
@@ -97,10 +117,7 @@ while running:
     anim.step(1/fps)
     anim.render()
 
-    for i in lines:
-        for x in range(len(i)-1):
-            pg.draw.circle(screen,(220,220,120),i[x],4)
-            pg.draw.line(screen,(220,220,120),i[x],i[x+1],10)
+    pen.draw_lines(screen,(220,220,110),10)
 
 
     if key_down(pg.K_BACKSPACE):

@@ -605,7 +605,7 @@ while running:
                                 touching.captain = kind_selected
                                 player_squares[turn] -= captain_cost
 
-        if touching.build == None:
+        if touching.build == None and mouse[0]:
             if current_action == 1:
                 if (
                     touching.troop_color == None or touching.troop_color == turn

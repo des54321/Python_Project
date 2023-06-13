@@ -66,13 +66,13 @@ for x in range(width):
         if grid[x][y] == 1:
             renders.append( Render(
                             'circle',
-                            Color(((x*x+y*y)**0.5)*delay,duration,[(40,120,220),(110,240,110)],power=3),
+                            Color(((x*x+y*y)**0.5)*delay,duration,[(40,120,220),(120,240,120)],power=3),
                             EaseValue(((x*x+y*y)**0.5)*delay,duration,0,circle_size,'sine'),
                             EasePoint(((x*x+y*y)**0.5)*delay,duration,(0.5*width*circle_dist,0.5*height*circle_dist),(circle_dist*(width-1)*-0.5+x*circle_dist,circle_dist*(height-1)*-0.5+y*circle_dist),'sine')))
         else:
             renders.append( Render(
                             'circle',
-                            Color(((x*x+y*y)**0.5)*delay,duration,[(110,240,110),(40,120,220)],power=3),
+                            Color(((x*x+y*y)**0.5)*delay,duration,[(120,240,120),(40,120,220)],power=3),
                             EaseValue(((x*x+y*y)**0.5)*delay,duration,0,circle_size,'sine'),
                             EasePoint(((x*x+y*y)**0.5)*delay,duration,(0.5*width*circle_dist,0.5*height*circle_dist),(circle_dist*(width-1)*-0.5+x*circle_dist,circle_dist*(height-1)*-0.5+y*circle_dist),'sine')))
 
@@ -123,7 +123,7 @@ while running:
             if grid[n//height][n%height] == 0:
                 i.fade_to((40,120,220),0.2,'sine')
             else:
-                i.fade_to((110,240,110),0.2,'sine')
+                i.fade_to((120,240,120),0.2,'sine')
             if first:
                 i.p1 = i.p1.get(anim.t)
                 i.size = circle_size

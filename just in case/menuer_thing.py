@@ -38,9 +38,9 @@ def draw_text_box(
     rect: pg.Rect,
     text: str,
     padding: int,
-    text_size: float,
     text_color: str,
     background_color: str,
+    font,
     include_box: bool = True,
     text_pos_x: str = "center",
     text_pos_y: str = "center",
@@ -57,7 +57,6 @@ def draw_text_box(
     text_pos_x: 'left', 'right', or 'center'
     text_pos_y: 'top', 'bottom', or 'center'
     """
-    font = pg.font.Font(default_font, math.floor(rect.height * text_size))
     if include_box:
         pg.draw.rect(screen, background_color, rect, 0, padding)
     return draw_text(screen, rect, text, font, True, text_color, text_pos_x, text_pos_y)
@@ -294,6 +293,7 @@ class Button:
         self.width_height = Vector2(size)
         self.show = show
         self.clicked = False
+        self.font = None
         if text_pos == 0:
             self.text_pos = [default_text_pos_x, default_text_pos_y]
         else:
@@ -303,6 +303,8 @@ class Button:
         """
         Updates whether the button is being clicked and does its action
         """
+        if self.font == None:
+            self.font = pg.font.Font(default_font, math.floor(self.scr_rect().h * text_box_size))
         was = self.clicked
         self.clicked = False
         set_cursor = None
@@ -333,9 +335,9 @@ class Button:
                     self.scr_rect(),
                     self.icon,
                     self.roundness,
-                    text_box_size,
                     self.colors[1],
                     self.colors[0],
+                    self.font,
                     not (self.colors[0] == None),
                     self.text_pos[0],
                     self.text_pos[1],
@@ -412,6 +414,7 @@ class Slider:
         self.width_height = Vector2(size)
         self.show = show
         self.knob_progress = action("get")
+        self.font = None
         if text_pos == 0:
             self.text_pos = [default_text_pos_x, default_text_pos_y]
         else:
@@ -421,6 +424,8 @@ class Slider:
         """
         Updates the slider, called by parent menu
         """
+        if self.font == None:
+            self.font = pg.font.Font(default_font, math.floor(self.scr_rect().h * text_box_size))
         set_cursor = None
         if self.scr_rect().collidepoint(pg.mouse.get_pos()):
             set_cursor = pg.SYSTEM_CURSOR_HAND
@@ -453,9 +458,9 @@ class Slider:
                     ),
                     self.icon,
                     self.roundness,
-                    text_box_size,
                     self.colors[1],
                     self.colors[0],
+                    self.font,
                     False,
                     self.text_pos[0],
                     self.text_pos[1],
@@ -586,6 +591,7 @@ class Text:
         self.editable = editable
         self.focus_pos = 0
         self.show = show
+        self.font = None
         if text_pos == 0:
             self.text_pos = [default_text_pos_x, default_text_pos_y]
         else:
@@ -595,6 +601,8 @@ class Text:
         """
         Updates the text box
         """
+        if self.font == None:
+            self.font = pg.font.Font(default_font, math.floor(self.scr_rect().h * text_box_size))
         if self.editable:
             set_cursor = None
             if self.scr_rect().collidepoint(pg.mouse.get_pos()):
@@ -614,9 +622,9 @@ class Text:
                 self.scr_rect(),
                 self.text,
                 self.roundness,
-                text_box_size,
                 self.colors[1],
                 self.colors[0],
+                self.font,
                 not (self.colors[0] == None),
                 self.text_pos[0],
                 self.text_pos[1],
@@ -724,103 +732,3 @@ def ex_slider_func(set_get):
         return (ex_slider_var - var_min) / (var_max - var_min)
     else:
         ex_slider_var = var_min + ((var_max - var_min) * set_get)
-
-
-# Debug stuff
-# pressed_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
-# pressed = []
-# last = []
-
-
-# for i in pressed_letters:
-#     pressed.append(False)
-#     last.append(False)
-
-
-# def update_pressed():
-#     global last
-#     global pressed
-#     global pressed_letters
-#     for x, i in enumerate(pressed_letters):
-#         test = eval('pg.K_' + i)
-#         press = key_down(test)
-#         if press and (not last[x]):
-#             pressed[x] = True
-#         else:
-#             pressed[x] = False
-#         if press:
-#             last[x] = True
-#         else:
-#             last[x] = False
-
-
-# def key_press(key: str):
-#     return pressed[pressed_letters.index(key)]
-
-
-# def key_down(key: pg.key) -> bool:
-#     return pg.key.get_pressed()[key]
-
-# def test_button_func():
-#     global test_var
-#     test_var += 0.1
-
-
-# test_var = 0
-# def test_var_slider_func(set_get):
-
-#     global test_var
-#     var_min = -1
-#     var_max = 2
-
-#     if set_get == 'get':
-#         return (test_var-var_min)/(var_max-var_min)
-#     else:
-#         test_var = var_min+((var_max-var_min)*set_get)
-
-
-# pg.init()
-
-# color_pal = [(3,5,2),(2,4,20),(4,8,30),(245,246,234),(120,110,170),(50,40,120),(200,195,210)]
-
-# s_w = 1600
-# s_h = 960
-# screen = pg.display.set_mode((s_w,s_h))
-# fps = 60
-# fps_clock = pg.time.Clock()
-# background_color = color_pal[0]
-
-
-# test_button = Button(
-#     [(0.35, 0.15),(0.35, 0.9),(0.55, 0.9),(0.65, 0.8),(0.65, 0.3),(0.6, 0.15),(0.45, 0.15),(0.45, 0.2),(0.4, 0.2),(0.4, 0.85),(0.55, 0.85),(0.6, 0.8),(0.6, 0.3),(0.6, 0.2),(0.45, 0.2),(0.45, 0.15)]
-#     ,(color_pal[4],color_pal[5]),Vector2(0.03,0.1),Vector2(0.1,0.4),test_button_func,'press',5
-# )
-
-# test_slider = Slider(
-#     [(0.2, 0.05),(0.05, 0.05),(0.05, 0.35),(0.2, 0.35),(0.2, 0.3),(0.1, 0.3),(0.1, 0.1),(0.2, 0.1),(0.3, 0.1),(0.3, 0.35),(0.45, 0.35),(0.45, 0.05),(0.4, 0.05),(0.4, 0.1),(0.4, 0.3),(0.35, 0.3),(0.35, 0.1),(0.4, 0.1),(0.4, 0.05),(0.3, 0.05)]
-#     ,(color_pal[4],color_pal[5],color_pal[3]), Vector2(0.15,0.1), Vector2(0.2,0.4), test_var_slider_func, 5
-# )
-
-# test_text = Text('Press Start', (color_pal[4],color_pal[5]), Vector2(0.37,0.1), Vector2(0.4,0.4), 5)
-
-
-# main_menu = Menu(Vector2(0,s_h-230), Vector2(0,s_h), s_w, 250, color_pal[6], 20, [test_button, test_slider, test_text], 0.1, False)
-
-
-# running = True
-# while running:
-
-#     screen.fill(background_color)
-#     main_menu.full_update()
-#     if key_press('m'):
-#         main_menu.direct *= -1
-
-#     for event in pg.event.get():
-#         if event.type == pg.QUIT:
-#             running = False
-
-
-#     update_pressed()
-#     pg.display.update()
-#     fps_clock.tick(fps)
-# pg.quit()

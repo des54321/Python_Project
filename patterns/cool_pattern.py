@@ -2,6 +2,7 @@ import pygame as pg
 import numpy as np
 import color_interpolation as clerp
 from math import floor
+from time import time
 
 
 pressed_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
@@ -39,10 +40,10 @@ def key_down(key: pg.key) -> bool:
 
 
 
-def draw_grid():
-    for x in range(gw):
-        for y in range(gh):
-                pg.draw.rect(screen,color.get(grid[x][y]/(colors-1)),pg.Rect(tile_size*x,tile_size*y,tile_size,tile_size))
+def draw_grid(r):
+    for y in range(gh)[r-1:r]:
+        for x in range(gw):
+            pg.draw.rect(screen,color.get(grid[x][y]/(colors-1)),pg.Rect(tile_size*x,tile_size*y,tile_size,tile_size))
 
 
 def in_grid(x,y):
@@ -114,7 +115,7 @@ def do_pattern(below = 0):
 
 
 pattern = []
-amount = 4
+amount = 1
 for i in range(amount):
     pattern.append([-1,i])
     pattern.append([1,i])
@@ -142,7 +143,7 @@ grid[gw//2][0] = 1
 
 do_pattern()
 
-
+delay = 0.05
 
 
 pg.init()
@@ -151,25 +152,26 @@ sh = gh*tile_size
 screen = pg.display.set_mode((sw,sh))
 fps = 60
 fps_clock = pg.time.Clock()
+start= time()
 
-draw_grid()
+draw_grid(0)
 update_pressed()
 pg.display.update()
-
+up_to = 0
 
 running = True
 while running:
+    if time()-start > up_to*delay:
+        up_to += 1
+    
+    draw_grid(up_to)
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
             running = False
 
     
-    if pg.mouse.get_pressed()[0]:
-        grid[floor(pg.mouse.get_pos()[0]/tile_size)][floor(pg.mouse.get_pos()[1]/tile_size)] = 0
-        do_pattern(floor(pg.mouse.get_pos()[1]/tile_size))
-        draw_grid()
-        update_pressed()
-        pg.display.update()
+    
+    pg.display.update()
     fps_clock.tick(fps)
 pg.quit()

@@ -114,11 +114,11 @@ def do_pattern(below = 0):
 #     pattern.append([i,i-1])
 
 
-pattern = []
-amount = 1
-for i in range(amount):
-    pattern.append([-1,i])
-    pattern.append([1,i])
+# pattern = []
+# amount = 1
+# for i in range(amount):
+#     pattern.append([-1,i])
+#     pattern.append([1,i])
 
 
 
@@ -126,6 +126,7 @@ for i in range(amount):
 # pattern = [[0,2],[-1,0],[1,0]]
 # pattern = [[2, 2], [-1, 0], [2, 1], [1, 0], [-1, 0]]
 # pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
+pattern = [[1,0],[-1,0],[0,1]]
 
 
 multi = [1 for _ in range(len(pattern))]
@@ -133,7 +134,7 @@ gw = 400
 gh = 225
 tile_size = 4
 
-colors = 2
+colors = 3
 color = clerp.ColorLerp(((20,140,40),(220,230,50),(245,60,80),(40,240,220)),[0.33,0.66])
 color = clerp.ColorLerp(((0,0,0),(255,255,255)),[])
 
@@ -143,7 +144,7 @@ grid[gw//2][0] = 1
 
 do_pattern()
 
-delay = 0.05
+delay = 0
 
 
 pg.init()

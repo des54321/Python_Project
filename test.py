@@ -1,1 +1,1 @@
-print(float(True))
+print(234123431242%1)

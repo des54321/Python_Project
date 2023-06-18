@@ -3,6 +3,7 @@ import numpy as np
 import color_interpolation as clerp
 from math import floor, ceil
 from time import time
+from random import randint
 
 
 pressed_letters = [
@@ -110,7 +111,6 @@ def do_layer(layer):
                     + (grid[i + ceil(x[0])][layer - 1 - x[1]] * (1 - x[0] % 1))
                 ) * multi[n]
 
-
         grid[i][layer] = count % colors
 
 
@@ -175,27 +175,39 @@ def do_pattern(below=0):
 # pattern = [[2, 2], [-1, 0], [2, 1], [1, 0], [-1, 0]]
 # pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
 
-pattern = [[-1, 0],[1,0]]
+pattern = []
+for i in range(3):
+    y = randint(0, 5)
+    x = randint(0, y + 1)
+    pattern.append([x, y])
+    pattern.append([-x, y])
+
+# pattern = [[-1, 0],[1,0]]
+# pattern = [[-2,1],[2,1],[0,0]]
 
 multi = [1 for _ in range(len(pattern))]
-gw = 160
-gh = 90
-tile_size = 10
+gw = 1600
+gh = 900
+tile_size = 1
 
-colors = 2
+colors = randint(3, 4)
+# colors = 3
 color = clerp.ColorLerp(
     ((20, 140, 40), (220, 230, 50), (245, 60, 80), (40, 240, 220)), [0.33, 0.66]
 )
+color = clerp.ColorLerp(((0, 0, 0), (255, 255, 255)), [])
+
 color = clerp.ColorLerp([(20, 30, 15), (120, 240, 120)], [])
 
 
 grid = np.array([[0.0 for __ in range(gh)] for _ in range(gw)])
 grid[gw // 2][0] = 1
 
+print(pattern)
+print(colors)
 do_pattern()
 
-
-delay = 0.01
+delay = 0
 
 
 pg.init()

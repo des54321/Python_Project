@@ -14,6 +14,7 @@ How to use this amazing tool:
  - When adding circles or connections, they will be fixed if you hold 'f' whild adding them, and they will not collide if you hold 'g'
  - When adding a connection, it will be a moveable solid line if 'r' is held
 
+ - Middle click to drag points
 
  - WASD to move the camera
  - 'n' to zoom in, 'm' to zoom out

@@ -42,24 +42,29 @@ def pos_scr(pos):
     return Vector2(pos[0]+(sw/2),sh-(pos[1]+(sh/2)))
 
 
-def square_step():
-    global squares, square_size
-    square_size /= 3
+def tri_step():
+    global tris, tri_size
+    tri_size /= 2
     new = []
-    for i in squares:
+    for i in tris:
         for x in dirs:
-            new.append(i+Vector2(x)*square_size)
-    squares = new
+            new.append(i+Vector2(x)*tri_size)
+    tris = new
 
 
 def draw_rect(pos,width,height,color):
     pg.draw.rect(screen,color,pg.Rect(pos[0]+(sw/2)-width/2,sh-(pos[1]+(sh/2)+height/2),width,height))
 
 
+def draw_tri(pos,size,color):
+    pg.draw.polygon(screen,color,[pos_scr((pos.x-size*0.866,pos.y-size/2)),pos_scr((pos.x+size*0.866,pos.y-size/2)),pos_scr((pos.x,pos.y+size))])
+
+def pos_scr(pos):
+    return Vector2(pos[0]+(sw/2),sh-(pos[1]+(sh/2)))
 
 
 
-dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+dirs = [[-0.866,0-0.5],[0.866,-0.5],[0,1]]
 
 
 
@@ -75,9 +80,8 @@ start = time()
 cur_start = 0
 
 delay = 0.5
-
-squares = [Vector2(0,0)]
-square_size = 1000
+tri_size = sh*0.6666*0.95
+tris = [Vector2(0,-sh/6)]
 
 
 
@@ -90,19 +94,19 @@ while running:
 
     if time()-start > cur_start*delay:
         cur_start += 1
-        if cur_start < 6:
+        if cur_start < 8:
             screen.fill(DG)
 
-            for i in squares:
-                draw_rect(i,square_size+1,square_size+1,GR)
+            for i in tris:
+                draw_tri(i,tri_size+1,GR)
             pg.display.update()
             
-            square_step()
-        elif cur_start == 6:
+            tri_step()
+        elif cur_start == 8:
             screen.fill(DG)
 
-            for i in squares:
-                draw_rect(i,square_size+1,square_size+1,GR)
+            for i in tris:
+                draw_tri(i,tri_size+1,GR)
             pg.display.update()
 
 
@@ -114,6 +118,7 @@ while running:
     
     update_pressed()
     screen.fill(DG)
+
     
 
     if key_down(pg.K_BACKSPACE):

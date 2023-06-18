@@ -2,6 +2,7 @@ import pygame as pg
 import anim
 from anim import *
 from menu_engine import Menu, Text
+from colors import *
 
 
 pressed_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
@@ -63,7 +64,7 @@ sqrt_3 = 0.866
 trih = 10
 delay = 0.08
 duration = 0.6
-circle_size = 52
+circle_size = 50
 
 circle_values = []
 
@@ -75,10 +76,11 @@ for y in range(trih):
         pos = Vector2(x*circle_dist-y*circle_dist*0.5,circle_dist*sqrt_3*trih*0.5-(y+0.5)*circle_dist*sqrt_3)
         scr_from_pos = pos_scr(pos)
         renders.append(Render('circle',
-                              Color((y+x)*delay,duration,[(50,220,220),(120,240,120)],power='sine'),
+                              Color((y+x)*delay,duration,[CY,GR],power='sine'),
                               EaseValue((y+x)*delay,duration,0,circle_size,'sine'),
                               EasePoint((y+x)*delay,duration,(400,0),pos,'sine')))
-        circle_values.append(Text(str(row[x]),(None,(20,30,15)),Vector2(scr_from_pos.x/sw,scr_from_pos.y/sh)-Vector2(circle_size/sw,circle_size/sh)/2,(circle_size/sw,circle_size/sh),False))
+        circle_values.append(Text(str(row[x]),(None,DG),Vector2(scr_from_pos.x/sw,scr_from_pos.y/sh)-Vector2(circle_size/sw,circle_size/sh)/2,(circle_size/sw,circle_size/sh),False))
+        renders[-1].text_ob = circle_values[-1]
 
 
 
@@ -89,7 +91,10 @@ for i in nums.contents:
     i.show = False
 
 
-num_color = ColorLerp([(120,240,120),(20,30,15)],[])
+num_color = ColorLerp([GR,DG],[])
+
+mod_color = ColorLerp([GR,BL],[])
+mod = 1
 
 fps = 60
 fps_clock = pg.time.Clock()
@@ -102,13 +107,19 @@ while running:
 
     
     update_pressed()
-    screen.fill((20,30,15))
+    screen.fill(DG)
     anim.step(1/fps)
     anim.render()
     if key_down(pg.K_BACKSPACE):
         running = False
     
     nums.full_update(events)
+
+    if key_press('m'):
+        mod += 1
+        for i in anim.renders:
+            i.fade_to(mod_color.get((int(i.text_ob.text)%mod)/mod),0.4,'sine')
+
 
     if anim.t > delay * trih * 3:
         for i in nums.contents:

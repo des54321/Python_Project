@@ -83,7 +83,6 @@ class OrnoPoints:
     def __mul__(self, other):
         new_list = []
         if type(other) == float or type(other) == int:
-            new_list = []
             for i in self.points:
                 new_list.append(i*other)
         return new_list
@@ -136,15 +135,10 @@ class OrnoPoints:
             if not i.z <= 0:
                 draw_circle([i.x/i.z*100,i.y/i.z*100],point_size,color)
 
-    
-
-    
-        
-        
-        
 
 
-        
+
+
 
 
 scene = OrnoPoints(is_cube= True, specs= [2,2,2,80,80,80])

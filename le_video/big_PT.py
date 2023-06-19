@@ -59,12 +59,12 @@ sw = 1920
 sh = 1080
 screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
 
-circle_dist = 110/4
+circle_dist = 55
 sqrt_3 = 0.866
-trih = 120
+trih = 45
 delay = 0.06
 duration = 0.6
-circle_size = 50/4
+circle_size = 25
 
 
 
@@ -120,15 +120,6 @@ while running:
     anim.render()
     if key_down(pg.K_BACKSPACE):
         running = False
-
-
-    
-
-
-    
-    
-
-    
 
     pg.display.update()
     fps_clock.tick(fps)

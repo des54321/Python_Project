@@ -104,6 +104,12 @@ class Render:
         self.anim = None
     
     def render(self,t):
+        if type(self.size) == EaseValue:
+            size = self.size.get(t)
+        else:
+            size = self.size
+        if size <= 0:
+            return 0
         if type(self.p1) == EasePoint:
             p1 = self.p1.get(t)
         else:
@@ -116,10 +122,6 @@ class Render:
             color = self.color.get(t)
         else:
             color = self.color
-        if type(self.size) == EaseValue:
-            size = self.size.get(t)
-        else:
-            size = self.size
         if self.type == 'line':
             draw_line(self.anim.screen,color,p1,p2,round(size))
         if self.type == 'circle':

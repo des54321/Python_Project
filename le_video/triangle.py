@@ -3,6 +3,7 @@ import anim
 from anim import *
 from menu_engine import Menu, Text
 from colors import *
+import pen
 
 
 pressed_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
@@ -65,6 +66,7 @@ trih = 10
 delay = 0.08
 duration = 0.6
 circle_size = 50
+pen.arrow_length /= 1.5
 
 
 
@@ -109,19 +111,35 @@ while running:
             running = False
 
     
+    pen.update_lines(8)
+
     update_pressed()
     screen.fill(DG)
     anim.step(1/fps)
     anim.render()
+    pen.draw_lines(screen,BL,10)
     if key_down(pg.K_BACKSPACE):
         running = False
     
     nums.full_update(events)
 
+    if key_press('s'):
+        pen.was_drawing = False
+        pen.last_dir = None
+        pen.lines.append([])
+        circle_res = 30
+        for i in range(circle_res+1):
+            new = Vector2()
+            new.from_polar((18,i*360/circle_res))
+            new.y *= 1.6
+            pen.lines[-1].append(new+Vector2(pg.mouse.get_pos()))
+    
     if key_press('m'):
         mod += 1
         for i in anim.renders:
             i.fade_to(mod_color.get((int(i.text_ob.text)%mod)/(mod-1)),0.4,'sine')
+    
+    
 
 
     if anim.t > delay * trih * 3:

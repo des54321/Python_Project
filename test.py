@@ -1,1 +1,2 @@
-print(234123431242%1)
+from pygame import Vector2
+Vector2()

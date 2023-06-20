@@ -75,14 +75,14 @@ while running:
     if pg.mouse.get_pressed()[2]:
         for i in renders:
             if i.p1.get(anim.t).distance_to(get_m_pos()) < circle_size:
-                i.color = GR
+                i.fade_to(GR,0.1,'sine')
     
     touch = False
     
     for i in renders:
         if i.p1.get(anim.t).distance_to(get_m_pos()) < circle_size:
             if pg.mouse.get_pressed()[0]:
-                i.color = BL
+                i.fade_to(BL,0.1,'sine')
             touch = True
             pen.was_drawing = False
             pen.last_dir = None
@@ -117,6 +117,7 @@ while running:
     screen.fill(DG)
     anim.step(1/fps)
     anim.render()
+    print(pen.drawing_arrow)
 
     pen.draw_lines(screen,PEN,10)
 

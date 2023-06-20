@@ -147,9 +147,6 @@ while running:
         do_sim = False
         for i in anim.renders:
             i.fade_to(DG,1,'sine')
-    
-    if key_press('e'):
-        pen.lines = []
         
     pen.draw_lines(screen,PEN,10) 
 

@@ -42,24 +42,6 @@ def pos_scr(pos):
     return Vector2(pos[0]+(sw/2),sh-(pos[1]+(sh/2)))
 
 
-def square_step():
-    global squares, square_size
-    square_size /= 3
-    new = []
-    for i in squares:
-        for x in dirs:
-            new.append(i+Vector2(x)*square_size)
-    squares = new
-
-
-def draw_rect(pos,width,height,color):
-    pg.draw.rect(screen,color,pg.Rect(pos[0]+(sw/2)-width/2,sh-(pos[1]+(sh/2)+height/2),width,height))
-
-
-
-
-
-dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
 
 
 
@@ -70,14 +52,7 @@ sw = 1920
 sh = 1080
 screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
 
-start = time()
 
-cur_start = 0
-
-delay = 0.5
-
-squares = [Vector2(0,0)]
-square_size = 1000
 
 
 
@@ -88,23 +63,6 @@ fps = 60
 running = True
 while running:
 
-    if time()-start > cur_start*delay:
-        cur_start += 1
-        if cur_start < 6:
-            screen.fill(DG)
-
-            for i in squares:
-                draw_rect(i,square_size+1,square_size+1,GR)
-            pg.display.update()
-            
-            square_step()
-        elif cur_start == 6:
-            screen.fill(DG)
-
-            for i in squares:
-                draw_rect(i,square_size+1,square_size+1,GR)
-            pg.display.update()
-
 
     events = pg.event.get()
     for event in events:
@@ -114,7 +72,9 @@ while running:
     
     update_pressed()
     screen.fill(DG)
-    
+
+    screen.fill(DG)
+    pg.display.update()
 
     if key_down(pg.K_BACKSPACE):
         running = False

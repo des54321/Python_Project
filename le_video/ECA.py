@@ -2,6 +2,7 @@ import pygame as pg
 import anim
 from anim import *
 import pen
+from colors import *
 
 
 pressed_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o','p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'COMMA', '1', '2', '3','4', '5', '6', '7', '8', '9', '0']
@@ -59,7 +60,7 @@ renders = []
 for i in range(length):
     renders.append( Render(
                     'circle',
-                    Color((i)*delay,duration,[(50,220,220),(120,240,120)],power='sine'),
+                    Color((i)*delay,duration,[CY,GR],power='sine'),
                     EaseValue((i)*delay,duration,0,circle_size,'sine'),
                     EasePoint((i)*delay,duration,(0,400),(circle_dist*length*-0.5+i*circle_dist,-200),'sine')))
 
@@ -74,20 +75,20 @@ while running:
     if pg.mouse.get_pressed()[2]:
         for i in renders:
             if i.p1.get(anim.t).distance_to(get_m_pos()) < circle_size:
-                i.color = (120,240,120)\
+                i.color = GR
     
     touch = False
     
     for i in renders:
         if i.p1.get(anim.t).distance_to(get_m_pos()) < circle_size:
             if pg.mouse.get_pressed()[0]:
-                i.color = (100,120,240)
+                i.color = BL
             touch = True
             pen.was_drawing = False
             pen.last_dir = None
     
     if not touch:
-        pen.update_lines(5)
+        pen.update_lines(8)
     
     if key_press('s'):
         pen.was_drawing = False
@@ -113,11 +114,11 @@ while running:
 
     
     update_pressed()
-    screen.fill((20,30,15))
+    screen.fill(DG)
     anim.step(1/fps)
     anim.render()
 
-    pen.draw_lines(screen,(220,220,110),10)
+    pen.draw_lines(screen,PEN,10)
 
 
     if key_down(pg.K_BACKSPACE):

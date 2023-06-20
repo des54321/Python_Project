@@ -22,6 +22,8 @@ How to use this amazing tool:
 
  -'k' to save the current scene
  -'l' to laod the last saved scene
+
+ -'v' to update line line lengths
 '''
 
 
@@ -89,7 +91,7 @@ def add_point(pos):
     The function thats called to add a point into the simulation
     '''
     if key_down(pg.K_b):
-        sim.points.append(sb.Point(pos,Vector2(0,0),default_point_size*2,car_color,sim,150))
+        sim.points.append(sb.Point(pos,Vector2(0,0),default_point_size*2,car_color,sim,5))
     else:
         sim.points.append(sb.Point(pos,Vector2(0,0),default_point_size,point_color,sim))
     if key_down(pg.K_f):
@@ -206,6 +208,11 @@ while running:
     if key_press('l'):
         if not save_sim == None:
             sim = deepcopy(save_sim)
+
+    if key_press('v'):
+        for i in sim.lines:
+            i:sb.Line
+            i.length = i.point_1.pos.distance_to(i.point_2.pos)
     
     if pg.mouse.get_pressed()[1]:
         if focus == -1:

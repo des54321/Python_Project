@@ -37,7 +37,6 @@ class Anim:
 
 
 
-
 class EaseValue:
 
     def __init__(self,start_t,duration,start,end,power=1) -> None:

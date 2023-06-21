@@ -79,13 +79,21 @@ def closest_point_to(point, p1, p2):
                 final = p2
         return final
 
-    
+
+
+def point_in_box(p:Vector2,b1:Vector2,b2:Vector2,radius=0):
+    if (p.x > b1.x+radius) == (p.x > b2.x) and (p.x > b1.x-radius) == (p.x > b2.x) and (p.x > b1.x) == (p.x > b2.x+radius) and (p.x > b1.x) == (p.x > b2.x-radius):
+        return False
+    if (p.y > b1.y+radius) == (p.y > b2.y) and (p.y > b1.y-radius) == (p.y > b2.y) and (p.y > b1.y) == (p.y > b2.y+radius) and (p.y > b1.y) == (p.y > b2.y-radius):
+        return False
+    return True
+
 
 
 
 class Sim:
     
-    def __init__(self, draw_line, draw_circle, get_m_pos, size:tuple, friction:float, gravity: float, resovle_times : int,debug: bool = False, debugging: str = None, breaking = False, max_stress = 0, stress_carry = 0.9) -> None:
+    def __init__(self, draw_line, draw_circle, get_m_pos, size:tuple, friction:float, gravity: float, resolve_times : int,debug: bool = False, debugging: str = None, breaking = False, max_stress = 0, stress_carry = 0.9) -> None:
         '''
         The softbody simulation class, holds all the components
 
@@ -95,7 +103,7 @@ class Sim:
         size: (width of area, height of area)
         friction: The frictiony the sim is
         gravity: How large the force of gravity is
-        resolve_times: How amny times the simulation will try to resovle rigid lines
+        resolve_times: How many times the simulation will try to resovle rigid lines
         debug: If the sim is in debug mode
         debbugging: What the sim should print for debug
         stress_carry: How much stress carries over each frame
@@ -111,7 +119,7 @@ class Sim:
         self.grav = gravity
         self.debug = debug
         self.debugging  = debugging
-        self.resovle_times = resovle_times
+        self.resovle_times = resolve_times
         self.get_m_pos = get_m_pos
         self.paused = False
         self.breaking = breaking
@@ -126,10 +134,11 @@ class Sim:
     
     def update_lines(self,dt):
         for i in self.lines:
-            i.full_update(dt)
+            if i.form == 'spring':
+                i.full_update(dt)
     
 
-    def resovle(self,dt):
+    def resolve(self,dt):
         for i in self.lines:
             if not i.form == 'spring':
                     i.full_update(dt)
@@ -154,7 +163,7 @@ class Sim:
             self.update_points(dt)
             self.update_lines(dt)
             for _ in range(self.resovle_times):
-                self.resovle(dt)
+                self.resolve(dt)
         self.render()
     
 
@@ -439,10 +448,11 @@ class Line:
         for i in self.sim.points:
             point:Point = i
             if point.move and point.solid:
-                closest = closest_point_to(point.pos,self.point_1.pos,self.point_2.pos)
-                dist = closest.distance_to(point.pos)
-                if dist < self.width + point.size:
-                    point.pos = closest - ((closest - point.pos) * ((self.width + point.size) / dist))
+                if point_in_box(point.pos,self.point_1.pos,self.point_2.pos,point.size+self.width):
+                    closest = closest_point_to(point.pos,self.point_1.pos,self.point_2.pos)
+                    dist = closest.distance_to(point.pos)
+                    if dist < self.width + point.size:
+                        point.pos = closest - ((closest - point.pos) * ((self.width + point.size) / dist))
     
 
     def update_msolid(self):
@@ -460,32 +470,33 @@ class Line:
             if not (i == self.point_1 or i == self.point_2):
                 point:Point = i
                 if point.solid and point.move:
-                    closest = closest_point_to(point.pos,self.point_1.pos,self.point_2.pos)
-                    dist = closest.distance_to(point.pos)
-                    if dist < self.width + point.size:
-                        p1_dist = self.point_1.pos.distance_to(closest)
-                        p2_dist = self.point_2.pos.distance_to(closest)
-                        hit_frac = p1_dist / (p1_dist+p2_dist)
-                        if not (self.point_1.move and self.point_2.move):
-                            p_frac = 1
-                        else:
-                            p_frac = (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac)))/(point.weight + (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac))))
-                        
-                        if not self.point_1.move:
-                            p1_frac = 1
-                        else:
-                            p1_frac = (2 * self.point_1.weight)/(point.weight + (2 * self.point_1.weight))
-                        
-                        if not self.point_2.move:
-                            p2_frac = 1
-                        else:
-                            p2_frac = (2 * self.point_2.weight)/(point.weight + (2 * self.point_2.weight))
-                        
-                        m_frac = ((self.width + point.size) / dist)
-                        multi = (closest-closest*m_frac+point.pos*m_frac-point.pos)
-                        point.pos += multi*p_frac
-                        self.point_1.pos -= multi*(1-p1_frac)*(1-hit_frac)
-                        self.point_2.pos -= multi*(1-p2_frac)*(hit_frac)
+                    if point_in_box(point.pos,self.point_1.pos,self.point_2.pos,point.size+self.width):
+                        closest = closest_point_to(point.pos,self.point_1.pos,self.point_2.pos)
+                        dist = closest.distance_to(point.pos)
+                        if dist < self.width + point.size:
+                            p1_dist = self.point_1.pos.distance_to(closest)
+                            p2_dist = self.point_2.pos.distance_to(closest)
+                            hit_frac = p1_dist / (p1_dist+p2_dist)
+                            if not (self.point_1.move and self.point_2.move):
+                                p_frac = 1
+                            else:
+                                p_frac = (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac)))/(point.weight + (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac))))
+                            
+                            if not self.point_1.move:
+                                p1_frac = 1
+                            else:
+                                p1_frac = (2 * self.point_1.weight)/(point.weight + (2 * self.point_1.weight))
+                            
+                            if not self.point_2.move:
+                                p2_frac = 1
+                            else:
+                                p2_frac = (2 * self.point_2.weight)/(point.weight + (2 * self.point_2.weight))
+                            
+                            m_frac = ((self.width + point.size) / dist)
+                            multi = (closest-closest*m_frac+point.pos*m_frac-point.pos)
+                            point.pos += multi*p_frac
+                            self.point_1.pos -= multi*(1-p1_frac)*(1-hit_frac)
+                            self.point_2.pos -= multi*(1-p2_frac)*(hit_frac)
         
         self.update_rigid()
 

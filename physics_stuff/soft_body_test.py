@@ -115,9 +115,9 @@ def add_line(p1,p2,length,form = 'rigid'):
 pg.init()
 
 #Screen
-sw = 1800
-sh = 1000
-screen = pg.display.set_mode((sw,sh))
+sw = 1920
+sh = 1080
+screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
 ###
 
 #Camera
@@ -141,7 +141,7 @@ cam_move_speed = 5
 sim_speed = 13
 start_time = 20 
 
-sim = sb.Sim(draw_line,draw_circle,get_m_pos,(sw,sh),1,-2,2,breaking=False,max_stress=5)
+sim = sb.Sim(draw_line,draw_circle,get_m_pos,(sw,sh),1,-2,1,breaking=False,max_stress=5)
 
 
 
@@ -214,6 +214,9 @@ while running:
         for i in sim.lines:
             i:sb.Line
             i.length = i.point_1.pos.distance_to(i.point_2.pos)
+    
+    if key_down(pg.K_BACKSPACE):
+        running = False
     
     if pg.mouse.get_pressed()[1]:
         if focus == -1:

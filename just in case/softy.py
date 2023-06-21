@@ -181,34 +181,32 @@ class Sim:
     
 
     def update_near_grid(self):
-        count = 0
+        solids = []
         for i in self.points:
                 if i.solid:
-                    count += 1
-        if not count < 2:
+                    solids.append(i)
+        if not len(solids) < 2:
             mid = Vector2(0,0)
             max_size = 0
-            for i in self.points:
-                if i.solid:
-                    mid += i.pos
-                    max_size = max(max_size,i.size)
+            for i in solids:
+                mid += i.pos
+                max_size = max(max_size,i.size)
             
             max_size *= 2
-            mid /= len(self.points)
+            mid /= len(solids)
             bound_tl = mid+Vector2(0,0)
             bound_br = mid+Vector2(0,0)
-            for i in self.points:
-                if i.solid:
-                    bound_tl.x = min(i.pos.x-i.size,bound_tl.x)
-                    bound_br.x = max(i.pos.x+i.size,bound_br.x)
-                    bound_br.y = min(i.pos.y-i.size,bound_br.y)
-                    bound_tl.y = max(i.pos.y+i.size,bound_tl.y)
+            for i in solids:
+                bound_tl.x = min(i.pos.x-i.size,bound_tl.x)
+                bound_br.x = max(i.pos.x+i.size,bound_br.x)
+                bound_br.y = min(i.pos.y-i.size,bound_br.y)
+                bound_tl.y = max(i.pos.y+i.size,bound_tl.y)
             
             bounds = pg.Rect(bound_tl,bound_br-bound_tl)
             bounds.h = abs(bounds.h)
             bounds.top -= bounds.h
 
-            grid_size = (int(max(floor(bounds.w/max_size),1)),int(max(floor(bounds.h/max_size),1)))
+            grid_size = (floor(max(floor(bounds.w/max_size),1)),floor(max(floor(bounds.h/max_size),1)))
             box_size = Vector2(bounds.w/grid_size[0],bounds.h/grid_size[1])
 
 
@@ -217,22 +215,20 @@ class Sim:
             self.near_grid_indexes = []
             
 
-            for i in self.points:
-                if i.solid:
-                    near_grid_pos = [floor((bounds.right-i.pos.x)/box_size.x),floor((bounds.bottom-i.pos.y)/box_size.y)]
-                    if not near_grid_pos in self.near_grid_indexes:
-                        self.near_grid_indexes.append(near_grid_pos)
-                        self.near_grid.append([i])
-                    else:
-                        self.near_grid[self.near_grid_indexes.index(near_grid_pos)].append(i)
-                    i.near_grid_pos = near_grid_pos
+            for i in solids:
+                near_grid_pos = [floor((bounds.right-i.pos.x)/box_size.x),floor((bounds.bottom-i.pos.y)/box_size.y)]
+                if not near_grid_pos in self.near_grid_indexes:
+                    self.near_grid_indexes.append(near_grid_pos)
+                    self.near_grid.append([i])
+                else:
+                    self.near_grid[self.near_grid_indexes.index(near_grid_pos)].append(i)
+                i.near_grid_pos = near_grid_pos
             
 
-            for i in self.points:
-                if i.solid:
-                    for n in possible_around(grid_size,i.near_grid_pos):
-                        if n in self.near_grid_indexes:
-                            self.near_grid[self.near_grid_indexes.index(n)].append(i)
+            for i in solids:
+                for n in possible_around(grid_size,i.near_grid_pos):
+                    if n in self.near_grid_indexes:
+                        self.near_grid[self.near_grid_indexes.index(n)].append(i)
             
             
             if self.debug:
@@ -247,7 +243,7 @@ class Sim:
                 if self.debugging == "near grid":
                     print(f'{self.near_grid} {len(self.near_grid)} {len(self.near_grid[0])}')
         else:
-            if count == 1:
+            if len(solids) == 1:
                 self.near_grid = [[self.points[0]]]
                 self.near_grid_indexes = [[0,0]]
             else:

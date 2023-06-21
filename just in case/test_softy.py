@@ -196,8 +196,11 @@ class Sim:
             self.near_grid = {}
             
 
+            real_pos = []
             for i in solids:
-                near_grid_pos = str([floor(i.pos.x/max_size),floor(i.pos.y/max_size)])
+                near_grid_pos = [floor(i.pos.x/max_size),floor(i.pos.y/max_size)]
+                real_pos.append(near_grid_pos)
+                near_grid_pos = str(near_grid_pos)
                 if near_grid_pos in self.near_grid:
                     self.near_grid[near_grid_pos].append(i)
                 else:
@@ -205,9 +208,9 @@ class Sim:
                 i.near_grid_pos = near_grid_pos
             
 
-            for i in solids:
+            for x,i in enumerate(solids):
                 for n in di_dirs:
-                    tup = eval(i.near_grid_pos)
+                    tup = real_pos[x]
                     val = str([tup[0]+n[0],tup[1]+n[1]])
                     if val in self.near_grid:
                         self.near_grid[val].append(i)

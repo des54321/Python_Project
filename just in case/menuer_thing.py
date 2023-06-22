@@ -776,16 +776,16 @@ class Toggle:
 
     def render(self):
         if self.show:
+            height = round(self.scr_rect().h)
+            hheight = height//2
             if self.on:
-                draw.line(self.menu.screen,self.colors[1],self.pos_per((0,0.5)),self.pos_per((1,0.5)),round(self.width_height.y*2))
-                draw.circle(self.menu.screen,self.colors[1],self.pos_per((0,0.5)),self.width_height.y)
-                draw.circle(self.menu.screen,self.colors[1],self.pos_per((1,0.5)),self.width_height.y)
-                draw.circle(self.menu.screen,self.colors[2],self.pos_per((1,0.5)),round(self.width_height.y*toggle_knob_size))
+                color = self.colors[1]
             else:
-                draw.line(self.menu.screen,self.colors[0],self.pos_per((0,0.5)),self.pos_per((1,0.5)),round(self.width_height.y*2))
-                draw.circle(self.menu.screen,self.colors[0],self.pos_per((0,0.5)),self.width_height.y)
-                draw.circle(self.menu.screen,self.colors[0],self.pos_per((1,0.5)),self.width_height.y)
-                draw.circle(self.menu.screen,self.colors[2],self.pos_per((0,0.5)),round(self.width_height.y*toggle_knob_size))
+                color = self.colors[0]
+            draw.line(self.menu.screen,color,self.pos_per((0,0.5)),self.pos_per((1,0.5)),height)
+            draw.circle(self.menu.screen,color,self.pos_per((0,0.5))+Vector2(0,1),hheight)
+            draw.circle(self.menu.screen,color,self.pos_per((1,0.5))+Vector2(0,1),hheight)
+            draw.circle(self.menu.screen,self.colors[2],self.pos_per((int(self.on),0.5)),round(height*toggle_knob_size*0.5))
 
 
 

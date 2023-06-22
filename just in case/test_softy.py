@@ -214,19 +214,6 @@ class Sim:
                     val = str([tup[0]+n[0],tup[1]+n[1]])
                     if val in self.near_grid:
                         self.near_grid[val].append(i)
-            
-            
-            if self.debug:
-                for i in range(grid_size[0]+1):
-                    self.draw_line((bounds.left+box_size.x*i,bounds.top),(bounds.left+box_size.x*i,bounds.bottom),2,(255,255,255))
-                for i in range(grid_size[1]+1):
-                    self.draw_line((bounds.left,bounds.top+box_size.y*i),(bounds.right,bounds.top+box_size.y*i),2,(255,255,255))
-                
-                self.draw_circle(bound_tl,10,(255,0,0))
-                self.draw_circle(bound_br,10,(255,0,0))
-                self.draw_circle(mid,10,(255,0,0))
-                if self.debugging == "near grid":
-                    print(f'{self.near_grid} {len(self.near_grid)} {len(self.near_grid[0])}')
         else:
             self.near_grid = {}
 

@@ -31,6 +31,12 @@ text_focus_bar_w = 0.06
 # The font
 default_font = "freesansbold.ttf"
 
+#Toggle settings
+
+#How big the knob is
+toggle_knob_size = 0.7
+
+
 
 # Draws a text box
 def draw_text_box(
@@ -718,6 +724,100 @@ class Text:
                                     + event.unicode
                                     + self.text[self.focus_pos :]
                                 )
+
+
+
+class Toggle:
+    def __init__(
+        self,
+        colors: tuple,
+        pos: Vector2,
+        size: Vector2,
+        on: bool = False,
+        show=True,
+    ) -> None:
+        """
+        A switch that can be on or off
+
+        colors: ( color of the toggle backgroud off, color of the toggle background on, color of the toggle switch )
+        pos: Percentage position on a menu [x%,y%]
+        size: [width%, height%]
+        on: If it starts on or off
+        show: If the toggle should be rendered
+        """
+
+        
+
+        self.menu = None
+        self.colors = colors
+        self.pos = Vector2(pos)
+        self.width_height = Vector2(size)
+        self.show = show
+        self.clicked = False
+        self.on = on
+
+
+    def update(self):
+        """
+        Updates whether the toggle has been switched
+        """
+        was = self.clicked
+        self.clicked = False
+        set_cursor = None
+        if self.scr_rect().collidepoint(pg.mouse.get_pos()):
+            set_cursor = pg.SYSTEM_CURSOR_HAND
+            if pg.mouse.get_pressed()[0]:
+                self.clicked = True
+
+        if (not was) and (self.clicked):
+            self.on = not self.on
+        return set_cursor
+
+
+    def render(self):
+        if self.show:
+            if self.on:
+                draw.line(self.menu.screen,self.colors[1],self.pos_per((0,0.5)),self.pos_per((1,0.5)),round(self.width_height.y*2))
+                draw.circle(self.menu.screen,self.colors[1],self.pos_per((0,0.5)),self.width_height.y)
+                draw.circle(self.menu.screen,self.colors[1],self.pos_per((1,0.5)),self.width_height.y)
+                draw.circle(self.menu.screen,self.colors[2],self.pos_per((1,0.5)),round(self.width_height.y*toggle_knob_size))
+            else:
+                draw.line(self.menu.screen,self.colors[0],self.pos_per((0,0.5)),self.pos_per((1,0.5)),round(self.width_height.y*2))
+                draw.circle(self.menu.screen,self.colors[0],self.pos_per((0,0.5)),self.width_height.y)
+                draw.circle(self.menu.screen,self.colors[0],self.pos_per((1,0.5)),self.width_height.y)
+                draw.circle(self.menu.screen,self.colors[2],self.pos_per((0,0.5)),round(self.width_height.y*toggle_knob_size))
+
+
+
+    def pos_per(self, per):
+        """
+        Gives out cords based on percentages of the buttons position
+        """
+        real_rect = self.scr_rect()
+        return Vector2(
+            real_rect.x + real_rect.w * per[0], real_rect.y + real_rect.h * per[1]
+        )
+
+    def scr_rect(self):
+        """
+        Gives a pygame Rect of the button on the screen
+        """
+        return Rect(
+            self.menu.pos_per(self.pos),
+            [
+                self.width_height[0] * self.menu.width,
+                self.width_height[1] * self.menu.height,
+            ],
+        )
+
+    def event_process(self, even):
+        """
+        Pst... this does NOTHING!
+        """
+        pass
+
+
+
 
 
 ex_slider_var = 0

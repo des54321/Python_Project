@@ -129,6 +129,7 @@ road_color = (120,190,80)
 solid_color = (200,130,20)
 ghost_color = (110,110,100)
 car_color = (120,140,220)
+spring_color = (240,210,30)
 line_width = 5
 solid_line_width = 10
 backdrop =(5,6,11)
@@ -136,6 +137,8 @@ outside_color = (200,230,140)
 
 cam_move_speed = 5
 ###
+
+
 
 #Simulation
 sim_speed = 13
@@ -281,6 +284,7 @@ while running:
                     if not sim.points[touch] == l_add:
                         if key_down(pg.K_LSHIFT):
                             add_line(l_add,sim.points[touch],sim.points[touch].pos.distance_to(l_add.pos),'spring')
+                            sim.lines[-1].color = spring_color
                         else:
                             add_line(l_add,sim.points[touch],sim.points[touch].pos.distance_to(l_add.pos))
         

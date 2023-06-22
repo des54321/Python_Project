@@ -175,11 +175,14 @@ side_bar_size = 250
 side_bar_colors = ((140,50,20),(120,200,120),(220,220,80))
 
 
-solid_text = Text('Solid',(None,side_bar_colors[1]),(0.2,0.02),(0.6,0.05))
-solid_toggle = Toggle((side_bar_colors[2],side_bar_colors[1],side_bar_colors[0]),(0.2,0.08),(0.6,0.05))
+fixed_text = Text('Fixed',(None,side_bar_colors[1]),(0.2,0.02),(0.6,0.05))
+fixed_toggle = Toggle((side_bar_colors[2],side_bar_colors[1],side_bar_colors[0]),(0.2,0.08),(0.6,0.05))
+
+ghost_text = Text('Ghost',(None,side_bar_colors[1]),(0.2,0.16),(0.6,0.05))
+ghost_toggle = Toggle((side_bar_colors[2],side_bar_colors[1],side_bar_colors[0]),(0.2,0.22),(0.6,0.05))
 
 
-side_bar = Menu(screen,(0,0),(-side_bar_size,0),side_bar_size,sh,side_bar_colors[0],20,[solid_toggle,solid_text],0.12,(False,True,False,True))
+side_bar = Menu(screen,(0,0),(-side_bar_size,0),side_bar_size,sh,side_bar_colors[0],20,[fixed_toggle,fixed_text,ghost_toggle,ghost_text],0.12,(False,True,False,True))
 
 
 
@@ -339,6 +342,10 @@ while running:
         sim.full_update(events,dt)
     
     counter_menu.full_update(events)
+
+    point_fixed = fixed_toggle.on
+    point_ghost = ghost_toggle.on
+
     side_bar.full_update(events)
 
     update_pressed()

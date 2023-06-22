@@ -420,20 +420,11 @@ class Line:
     
 
     def update_msolid(self):
-        if not (self.point_1.move or self.point_2.move):
-            self.point_1.set_form('blank')
-            self.point_1.size = self.width
-            self.point_1.color = self.color
-            self.point_2.set_form('blank')
-            self.point_2.size = self.width
-            self.point_2.color = self.color
-            self.form = 'fsolid'
-            return None
 
         for i in self.sim.points:
             if not (i == self.point_1 or i == self.point_2):
                 point:Point = i
-                if point.solid and point.move:
+                if point.solid:
                     if point_in_box(point.pos,self.point_1.pos,self.point_2.pos,point.size+self.width):
                         closest = closest_point_to(point.pos,self.point_1.pos,self.point_2.pos)
                         dist = closest.distance_to(point.pos)
@@ -444,23 +435,35 @@ class Line:
                             if not (self.point_1.move and self.point_2.move):
                                 p_frac = 1
                             else:
-                                p_frac = (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac)))/(point.weight + (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac))))
-                            
+                                if point.move:
+                                    p_frac = (2 * point.weight)/(point.weight + (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_2.weight * hit_frac))))
+                                else:
+                                    p_frac = 0
+
                             if not self.point_1.move:
                                 p1_frac = 1
                             else:
-                                p1_frac = (2 * self.point_1.weight)/(point.weight + (2 * self.point_1.weight))
+                                if point.move:
+                                    p1_frac = (2 * self.point_1.weight)/(point.weight + (2 * self.point_1.weight))
+                                else:
+                                    p1_frac = 0
                             
                             if not self.point_2.move:
                                 p2_frac = 1
                             else:
-                                p2_frac = (2 * self.point_2.weight)/(point.weight + (2 * self.point_2.weight))
+                                if point.move:
+                                    p2_frac = (2 * self.point_2.weight)/(point.weight + (2 * self.point_2.weight))
+                                else:
+                                    p2_frac = 0
                             
                             m_frac = ((self.width + point.size) / dist)
                             multi = (closest-closest*m_frac+point.pos*m_frac-point.pos)
-                            point.pos += multi*p_frac
-                            self.point_1.pos -= multi*(1-p1_frac)*(1-hit_frac)
-                            self.point_2.pos -= multi*(1-p2_frac)*(hit_frac)
+                            if point.move:
+                                point.pos += multi*p_frac
+                            if self.point_1.move:
+                                self.point_1.pos -= multi*(1-p1_frac)*(1-hit_frac)
+                            if self.point_2.move:
+                                self.point_2.pos -= multi*(1-p2_frac)*(hit_frac)
         
         self.update_rigid()
 

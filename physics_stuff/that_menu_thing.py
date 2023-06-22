@@ -12,7 +12,7 @@ slider_knob_size = 0.2
 #Where on the box the bar is displayed
 slider_bar_height = 0.75
 #How thick the bar is
-slider_bar_thickness = 0.1
+slider_bar_thickness = 0.11
 #How long the bar is, in terms of box width
 slider_bar_length = 0.7
 #How high text appears on the slider

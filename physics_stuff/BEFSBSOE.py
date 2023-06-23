@@ -95,15 +95,14 @@ def add_point(pos):
     '''
     The function thats called to add a point into the simulation
     '''
-    if key_down(pg.K_b):
-        sim.points.append(sb.Point(pos,Vector2(0,0),default_point_size*2,car_color,sim,5))
-    else:
-        sim.points.append(sb.Point(pos,Vector2(0,0),default_point_size,point_color,sim))
+    sim.points.append(sb.Point(pos,Vector2(0,0),solid_line_width,point_color,sim))
     if point_fixed:
         sim.points[-1].move = False
     if point_ghost:
         sim.points[-1].solid = False
         sim.points[-1].color = ghost_color
+    if big_point:
+        sim.points[-1].size = default_point_size
 
 
 
@@ -147,7 +146,7 @@ ghost_color = (110,110,100)
 car_color = (120,140,220)
 spring_color = (240,210,30)
 line_width = 5
-solid_line_width = 10
+solid_line_width = 16
 backdrop = (5,6,11)
 outside_color = (200,230,140)
 
@@ -160,7 +159,7 @@ cam_move_speed = 5
 sim_speed = 13
 start_time = 20 
 
-sim = sb.Sim(draw_line,draw_circle,get_m_pos,(sw,sh),1,-2,1,breaking=False,max_stress=5)
+sim = sb.Sim(draw_line,draw_circle,get_m_pos,(sw,sh),1,-2,3,breaking=False,max_stress=5)
 
 
 
@@ -181,8 +180,11 @@ fixed_toggle = Toggle((side_bar_colors[2],side_bar_colors[1],side_bar_colors[0])
 ghost_text = Text('Ghost',(None,side_bar_colors[1]),(0.2,0.16),(0.6,0.05))
 ghost_toggle = Toggle((side_bar_colors[2],side_bar_colors[1],side_bar_colors[0]),(0.2,0.22),(0.6,0.05))
 
+size_text = Text('Size',(None,side_bar_colors[1]),(0.2,0.3),(0.6,0.05))
+size_toggle = Toggle((side_bar_colors[2],side_bar_colors[1],side_bar_colors[0]),(0.2,0.36),(0.6,0.05))
 
-side_bar = Menu(screen,(0,0),(-side_bar_size,0),side_bar_size,sh,side_bar_colors[0],20,[fixed_toggle,fixed_text,ghost_toggle,ghost_text],0.12,(False,True,False,True))
+
+side_bar = Menu(screen,(0,0),(-side_bar_size,0),side_bar_size,sh,side_bar_colors[0],20,[fixed_toggle,fixed_text,ghost_toggle,ghost_text,size_toggle,size_text],0.12,(False,True,False,True))
 
 
 
@@ -203,6 +205,7 @@ focus_offset = Vector2(0,0)
 
 point_fixed = False
 point_ghost = False
+big_point = False
 
 
 save_sim = None
@@ -216,6 +219,8 @@ dt = (1/fps)*sim_speed
 fps_clock = pg.time.Clock()
 running = True
 while running:
+    # if len(sim.points) > 0:
+    #     print((sim.points[0].pos - sim.points[0].pre_pos).length())
     start_time = max(start_time-1,0)
 
     events = pg.event.get()
@@ -345,6 +350,7 @@ while running:
 
     point_fixed = fixed_toggle.on
     point_ghost = ghost_toggle.on
+    big_point = size_toggle.on
 
     side_bar.full_update(events)
 

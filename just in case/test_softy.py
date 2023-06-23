@@ -436,7 +436,7 @@ class Line:
                                 p_frac = 1
                             else:
                                 if point.move:
-                                    p_frac = (2 * point.weight)/(point.weight + (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_2.weight * hit_frac))))
+                                    p_frac = (2 * point.weight)/(2 * point.weight + self.point_1.weight * (1-hit_frac) + self.point_2.weight * hit_frac)
                                 else:
                                     p_frac = 0
 
@@ -444,7 +444,7 @@ class Line:
                                 p1_frac = 1
                             else:
                                 if point.move:
-                                    p1_frac = (2 * self.point_1.weight)/(point.weight + (2 * self.point_1.weight))
+                                    p1_frac = (2 * self.point_1.weight)/(point.weight + 2 * self.point_1.weight)
                                 else:
                                     p1_frac = 0
                             
@@ -452,14 +452,14 @@ class Line:
                                 p2_frac = 1
                             else:
                                 if point.move:
-                                    p2_frac = (2 * self.point_2.weight)/(point.weight + (2 * self.point_2.weight))
+                                    p2_frac = (2 * self.point_2.weight)/(point.weight + 2 * self.point_2.weight)
                                 else:
                                     p2_frac = 0
                             
                             m_frac = ((self.width + point.size) / dist)
                             multi = (closest-closest*m_frac+point.pos*m_frac-point.pos)
                             if point.move:
-                                point.pos += multi*p_frac
+                                point.pos += multi*(1-p_frac)
                             if self.point_1.move:
                                 self.point_1.pos -= multi*(1-p1_frac)*(1-hit_frac)
                             if self.point_2.move:

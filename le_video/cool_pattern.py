@@ -4,6 +4,8 @@ import color_interpolation as clerp
 from math import floor, ceil
 from time import time
 from random import randint
+import pen
+from colors import *
 
 
 pressed_letters = [
@@ -84,7 +86,7 @@ def draw_grid(r):
             pg.draw.rect(
                 screen,
                 color.get(grid[x][y] / (colors - 1)),
-                pg.Rect(tile_size * x, tile_size * y, tile_size, tile_size),
+                pg.Rect(tile_size * x, tile_size * y+(sh-(gh*tile_size))*0.5, tile_size, tile_size),
             )
 
 
@@ -175,29 +177,31 @@ def do_pattern(below=0):
 # pattern = [[2, 2], [-1, 0], [2, 1], [1, 0], [-1, 0]]
 # pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
 
-pattern = []
-for i in range(3):
-    y = randint(0, 5)
-    x = randint(0, y + 1)
-    pattern.append([x, y])
-    pattern.append([-x, y])
+# pattern = []
+# for i in range(3):
+#     y = randint(0, 5)
+#     x = randint(0, y + 1)
+#     pattern.append([x, y])
+#     pattern.append([-x, y])
 
-# pattern = [[-1, 0],[1,0]]
+pattern = [[-1, 0],[1,0]]
 # pattern = [[-2,1],[2,1],[0,0]]
 
 multi = [1 for _ in range(len(pattern))]
-gw = 1600
-gh = 900
-tile_size = 1
+gw = 192
+gh = 96
+tile_size = 10
+
+mul = 8
+gw //= mul
+gh //= mul
+tile_size *= mul
 
 colors = randint(3, 4)
-# colors = 3
-color = clerp.ColorLerp(
-    ((20, 140, 40), (220, 230, 50), (245, 60, 80), (40, 240, 220)), [0.33, 0.66]
-)
-color = clerp.ColorLerp(((0, 0, 0), (255, 255, 255)), [])
+colors = 2
 
-color = clerp.ColorLerp([(20, 30, 15), (120, 240, 120)], [])
+
+color = clerp.ColorLerp([DG, GR], [])
 
 
 grid = np.array([[0.0 for __ in range(gh)] for _ in range(gw)])
@@ -210,10 +214,13 @@ do_pattern()
 delay = 0
 
 
+doing_pen = False 
+
+
 pg.init()
-sw = gw * tile_size
-sh = gh * tile_size
-screen = pg.display.set_mode((sw, sh))
+sw = 1920
+sh = 1080
+screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
 fps = 60
 fps_clock = pg.time.Clock()
 start = time()
@@ -225,15 +232,36 @@ up_to = 0
 
 running = True
 while running:
+
+    if doing_pen:
+        pen.update_lines(8)
     if time() - start > up_to * delay:
         up_to += 1
+    
+    if key_press('n'):
+        start = time()
+        up_to = 0
+        colors += 1
+        do_pattern()
 
-    draw_grid(up_to)
+    if up_to > gh and doing_pen:
+        screen.fill((0,0,0))
+        for i in range(gh):
+            draw_grid(i+1)
+    else:
+        draw_grid(up_to)
+
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
             running = False
 
+    if doing_pen:
+        pen.draw_lines(screen,BL,10)
     pg.display.update()
+    update_pressed()
     fps_clock.tick(fps)
+
+    if key_down(pg.K_BACKSPACE):
+        running = False
 pg.quit()

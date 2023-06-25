@@ -34,6 +34,10 @@ class Anim:
     def render(self):
         for i in self.renders:
             i.render(self.t)
+    
+    def update_renders(self):
+        for i in self.renders:
+            i.anim = self
 
 
 

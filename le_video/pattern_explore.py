@@ -187,6 +187,7 @@ for i in range(amount):
     pattern.append([(i%2)+1,i])
 
 # pattern = [[-1,1],[1,1],[-1,2],[1,2],[-1,0],[1,0]]
+pattern = [[-1,0],[1,0]]
 print(pattern)
 
 multi = [1 for _ in range(len(pattern))]
@@ -218,8 +219,8 @@ grid[gw//2][1] = 0
 
 
 pg.init()
-sw = 1600
-sh = 900
+sw = 1920
+sh = 1080
 
 tile_size = min(floor(sw/gw),floor(sh/gh))
 
@@ -245,7 +246,8 @@ floor_color = (120,60,10)
 
 wall_height = 1
 
-screen = pg.display.set_mode((sw,sh))
+
+screen = pg.display.set_mode((sw, sh), pg.FULLSCREEN)
 fps = 60
 fps_clock = pg.time.Clock()
 
@@ -314,4 +316,7 @@ while running:
     move_speed = true_move_speed/max(fps_clock.get_fps(),10)
     if key_down(pg.K_LSHIFT):
         move_speed *= 8
+    
+    if key_down(pg.K_BACKSPACE):
+        running = False
 pg.quit()

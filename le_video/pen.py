@@ -83,6 +83,7 @@ def update_lines(del_radius):
     if pg.key.get_pressed()[pg.K_e]:
         lines = []
         arrows = []
+        was_drawing = False
 
 
 

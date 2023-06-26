@@ -67,6 +67,8 @@ for i in range(length):
 
 anim = Anim(renders,screen)
 
+anim.t = -2
+
 
 fps = 60
 fps_clock = pg.time.Clock()
@@ -90,7 +92,7 @@ while running:
     if not touch:
         pen.update_lines(8)
     
-    if key_press('s'):
+    if key_press('a'):
         pen.was_drawing = False
         pen.last_dir = None
         pen.lines.append([])
@@ -101,7 +103,7 @@ while running:
             new.y *= 1.6
             pen.lines[-1].append(new+Vector2(pg.mouse.get_pos()))
     
-    if key_press('a'):
+    if key_press('s'):
         pen.was_drawing = False
         pen.last_dir = None
         pos = pg.mouse.get_pos()
@@ -117,7 +119,6 @@ while running:
     screen.fill(DG)
     anim.step(1/fps)
     anim.render()
-    print(pen.drawing_arrow)
 
     pen.draw_lines(screen,PEN,10)
 

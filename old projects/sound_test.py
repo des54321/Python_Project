@@ -1,7 +1,11 @@
 import numpy as np
 import simpleaudio as sa
+import pydub as pd
 import pygame as pg
 import math
+
+
+
 
 frequency = 200
 fs = 44100

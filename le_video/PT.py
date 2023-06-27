@@ -85,7 +85,7 @@ for y in range(trih):
                               EaseValue((y+x)*delay,duration,0,circle_size,'sine'),
                               EasePoint((y+x)*delay,duration,(400,0),pos,'sine')))
         circle_values.append(Text(str(row[x]),(None,DG),Vector2(scr_from_pos.x/sw,scr_from_pos.y/sh)-Vector2(circle_size/sw,circle_size/sh)/2,(circle_size/sw,circle_size/sh),False))
-        renders[-1].text_ob = circle_values[-1]
+        renders[-1].text = circle_values[-1].text
 
 
 
@@ -101,6 +101,11 @@ num_color = ColorLerp([GR,DG],[])
 mod_color = ColorLerp([GR,BL],[])
 mod = 1
 
+
+fade_time = 0
+faded = False
+
+
 fps = 60
 fps_clock = pg.time.Clock()
 running = True
@@ -115,9 +120,14 @@ while running:
 
     update_pressed()
     screen.fill(DG)
+    if faded:
+        fade_time += 1/fps
     anim.step(1/fps)
     anim.render()
-    pen.draw_lines(screen,BL,10)
+    if faded:
+        pen.draw_lines(screen,PEN,10)
+    else:
+        pen.draw_lines(screen,BL,10)
     if key_down(pg.K_BACKSPACE):
         running = False
     
@@ -137,7 +147,7 @@ while running:
     if key_press('m'):
         mod += 1
         for i in anim.renders:
-            i.fade_to(mod_color.get((int(i.text_ob.text)%mod)/(mod-1)),0.4,'sine')
+            i.fade_to(mod_color.get((int(i.text)%mod)/(mod-1)),0.4,'sine')
     
     
 
@@ -146,6 +156,47 @@ while running:
         for i in nums.contents:
             i.show = True
             i.colors = (None,num_color.get((anim.t-delay*trih*3)))
+    
+
+    if key_press('b'):
+        nums.contents = []
+        for i in anim.renders:
+            i.p1 = EasePoint(anim.t,2,i.p1.get(anim.t),i.p1.get(anim.t)/4+Vector2(0,358),'sine')
+            i.size = EaseValue(anim.t,2,i.size.get(anim.t),i.size.get(anim.t)/4,'sine')
+        
+
+        trih *= 4
+        circle_dist /= 4
+        circle_size //= 4
+        for y in range(trih//4,trih):
+            row = pascal(y)
+            for x in range(y+1):
+                pos = Vector2(x*circle_dist-y*circle_dist*0.5,circle_dist*sqrt_3*trih*0.5-(y+0.5)*circle_dist*sqrt_3)
+                renders.insert(0,Render('circle',
+                                    Color(anim.t+2,2,[DG,mod_color.get((row[x]%mod)/(mod-1))],power='sine'),
+                                    circle_size,
+                                    pos))
+                renders[0].text = str(row[x])
+        anim.update_renders()
+    
+
+    if key_down(pg.K_z):
+        for i in anim.renders:
+            if not type(i.p1) == Vector2:
+                i.p1 = i.p1.get(anim.t)
+            i.p1 *= 1.001
+            if not (type(i.size) == float or type(i.size) == int):
+                i.size = i.size.get(anim.t)
+            i.size *= 1.001
+
+
+    if key_press('f'):
+        faded = True
+        for i in anim.renders:
+            i.fade_to(DG,0.4,'sine')
+    
+    if fade_time > 0.4:
+        anim.renders = []
     
 
     

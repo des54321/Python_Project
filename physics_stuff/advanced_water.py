@@ -52,16 +52,62 @@ def range_dist(i):
         return range(i+1,0)
 
 
-gw = 96
-gh = 54
+def apply_grav():
+    global grid, grid_vels
+    for x in range(gw):
+        for y in range(gh):
+            if grid[x][y] == 2:
+                grid_vels[x][y][1] = grid_vels[x][y][1] +1
+    print(grid_vels)
+
+
+def move_fluid():
+    global grid, grid_vels
+    for x in range(gw):
+        for y in range(gh):
+            if grid[x][y] == 2:
+                vel = grid_vels[x][y]
+                grid[x][y] = 0
+                grid_vels[x][y] = [0,0]
+                if is_in(x+vel[0],y+vel[1]):
+                    grid[x+vel[0]][y+vel[1]] = 2
+                    grid_vels[x+vel[0]][y+vel[1]] = vel
+
+
+def is_in(x : int, y : int) -> bool:
+    if x >= gw:
+        return False
+    if x < 0:
+        return False
+    if y >= gh:
+        return False
+    if y < 0:
+        return False
+    return True
+
+
+gw = 16
+gh = 9
 
 grid = np.array([[0]*gh]*gw)
+grid_vels = np.array([[[0,0]]*gh]*gw)
 
-colors = [(5,6,8),(230,240,250)]
+
+colors = [(5,6,8),(230,240,250),(20,40,240)]
 
 
 m_pos = [0,0]
 pre_m_pos = [0,0]
+
+
+# Grav is applied every X frames, so higher = less grav
+grav = 20
+grav_timer = 0
+
+sim_cycle = 20
+sim_timer = 0
+
+
 
 pg.init()
 sw = 1920
@@ -71,6 +117,17 @@ fps = 60
 fps_clock = pg.time.Clock()
 running = True
 while running:
+    grav_timer += 1
+    grav_timer %= grav
+    if grav_timer == 0:
+        apply_grav()
+    
+
+    sim_timer += 1
+    sim_timer %= sim_cycle
+    if sim_timer == 0:
+        move_fluid()
+
     events = pg.event.get()
     for event in events:
         if event.type == pg.QUIT:
@@ -85,10 +142,16 @@ while running:
 
     if pg.mouse.get_pressed()[0]:
         grid[m_pos[0]][m_pos[1]] = 1
+        grid[m_pos[0]][pre_m_pos[1]] = 1
         for i in range_dist(m_pos[0]-pre_m_pos[0]):
             grid[pre_m_pos[0]+i][pre_m_pos[1]] = 1
         for i in range_dist(m_pos[1]-pre_m_pos[1]):
             grid[m_pos[0]][pre_m_pos[1]+i] = 1
+    
+    if pg.mouse.get_pressed()[1]:
+        if grid[m_pos[0]][m_pos[1]] == 0:
+            grid[m_pos[0]][m_pos[1]] = 2
+            grid_vels[m_pos[0]][m_pos[1]] = [0,0]
 
     update_pressed()
 

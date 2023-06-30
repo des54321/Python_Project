@@ -57,21 +57,24 @@ def apply_grav():
     for x in range(gw):
         for y in range(gh):
             if grid[x][y] == 2:
-                grid_vels[x][y][1] = grid_vels[x][y][1] +1
-    print(grid_vels)
+                grid_vels[x][y][1] += 1
 
 
 def move_fluid():
     global grid, grid_vels
+    new_grid = grid.copy()
+    new_vels = grid_vels.copy()
     for x in range(gw):
         for y in range(gh):
             if grid[x][y] == 2:
                 vel = grid_vels[x][y]
-                grid[x][y] = 0
-                grid_vels[x][y] = [0,0]
+                new_grid[x][y] = 0
+                new_vels[x][y] = [0,0]
                 if is_in(x+vel[0],y+vel[1]):
-                    grid[x+vel[0]][y+vel[1]] = 2
-                    grid_vels[x+vel[0]][y+vel[1]] = vel
+                    new_grid[x+vel[0]][y+vel[1]] = 2
+                    new_vels[x+vel[0]][y+vel[1]] = vel
+    grid = new_grid
+    grid_vels = new_vels
 
 
 def is_in(x : int, y : int) -> bool:
@@ -86,11 +89,12 @@ def is_in(x : int, y : int) -> bool:
     return True
 
 
-gw = 16
-gh = 9
+gw = 80
+gh = 45
 
-grid = np.array([[0]*gh]*gw)
-grid_vels = np.array([[[0,0]]*gh]*gw)
+grid = np.zeros((gw,gh),int)
+grid_vels = np.zeros((gw,gh,2),int)
+
 
 
 colors = [(5,6,8),(230,240,250),(20,40,240)]

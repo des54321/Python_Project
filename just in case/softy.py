@@ -113,8 +113,7 @@ class Sim:
         self.size = size
         self.points = []
         self.lines = []
-        self.near_grid = []
-        self.near_grid_indexes = []
+        self.near_grid = {}
         self.friction = friction
         self.grav = gravity
         self.debug = debug
@@ -185,7 +184,7 @@ class Sim:
         for i in self.points:
                 if i.solid:
                     solids.append(i)
-        if not len(solids) < 2:
+        if not len(solids) < 1:
             mid = Vector2(0,0)
             max_size = 0
             for i in solids:
@@ -193,62 +192,30 @@ class Sim:
                 max_size = max(max_size,i.size)
             
             max_size *= 2
-            mid /= len(solids)
-            bound_tl = mid+Vector2(0,0)
-            bound_br = mid+Vector2(0,0)
+            
+            self.near_grid = {}
+            
+
+            real_pos = []
             for i in solids:
-                bound_tl.x = min(i.pos.x-i.size,bound_tl.x)
-                bound_br.x = max(i.pos.x+i.size,bound_br.x)
-                bound_br.y = min(i.pos.y-i.size,bound_br.y)
-                bound_tl.y = max(i.pos.y+i.size,bound_tl.y)
-            
-            bounds = pg.Rect(bound_tl,bound_br-bound_tl)
-            bounds.h = abs(bounds.h)
-            bounds.top -= bounds.h
-
-            grid_size = (floor(max(floor(bounds.w/max_size),1)),floor(max(floor(bounds.h/max_size),1)))
-            box_size = Vector2(bounds.w/grid_size[0],bounds.h/grid_size[1])
-
-
-            
-            self.near_grid = []
-            self.near_grid_indexes = []
-            
-
-            for i in solids:
-                near_grid_pos = [floor((bounds.right-i.pos.x)/box_size.x),floor((bounds.bottom-i.pos.y)/box_size.y)]
-                if not near_grid_pos in self.near_grid_indexes:
-                    self.near_grid_indexes.append(near_grid_pos)
-                    self.near_grid.append([i])
+                near_grid_pos = [floor(i.pos.x/max_size),floor(i.pos.y/max_size)]
+                real_pos.append(near_grid_pos)
+                near_grid_pos = str(near_grid_pos)
+                if near_grid_pos in self.near_grid:
+                    self.near_grid[near_grid_pos].append(i)
                 else:
-                    self.near_grid[self.near_grid_indexes.index(near_grid_pos)].append(i)
+                    self.near_grid[near_grid_pos] = [i]
                 i.near_grid_pos = near_grid_pos
             
 
-            for i in solids:
-                for n in possible_around(grid_size,i.near_grid_pos):
-                    if n in self.near_grid_indexes:
-                        self.near_grid[self.near_grid_indexes.index(n)].append(i)
-            
-            
-            if self.debug:
-                for i in range(grid_size[0]+1):
-                    self.draw_line((bounds.left+box_size.x*i,bounds.top),(bounds.left+box_size.x*i,bounds.bottom),2,(255,255,255))
-                for i in range(grid_size[1]+1):
-                    self.draw_line((bounds.left,bounds.top+box_size.y*i),(bounds.right,bounds.top+box_size.y*i),2,(255,255,255))
-                
-                self.draw_circle(bound_tl,10,(255,0,0))
-                self.draw_circle(bound_br,10,(255,0,0))
-                self.draw_circle(mid,10,(255,0,0))
-                if self.debugging == "near grid":
-                    print(f'{self.near_grid} {len(self.near_grid)} {len(self.near_grid[0])}')
+            for x,i in enumerate(solids):
+                for n in di_dirs:
+                    tup = real_pos[x]
+                    val = str([tup[0]+n[0],tup[1]+n[1]])
+                    if val in self.near_grid:
+                        self.near_grid[val].append(i)
         else:
-            if len(solids) == 1:
-                self.near_grid = [[self.points[0]]]
-                self.near_grid_indexes = [[0,0]]
-            else:
-                self.near_grid = []
-                self.near_grid_indexes = []
+            self.near_grid = {}
 
 
 
@@ -280,6 +247,7 @@ class Point:
         self.accel = Vector2()
         self.near_grid_pos = [0,0]
         self.set_form(form)
+        self.near_grid_pos = [0,0]
     
 
     def set_form(self, form):
@@ -328,7 +296,7 @@ class Point:
 
     def collide(self):
         if self.move and self.solid:
-            for i in self.sim.near_grid[self.sim.near_grid_indexes.index(self.near_grid_pos)]:
+            for i in self.sim.near_grid[self.near_grid_pos]:
                 if (not i == self) and i.solid:
                     pother:Point = i
                     dist = pother.pos.distance_to(self.pos)
@@ -452,20 +420,11 @@ class Line:
     
 
     def update_msolid(self):
-        if not (self.point_1.move or self.point_2.move):
-            self.point_1.set_form('blank')
-            self.point_1.size = self.width
-            self.point_1.color = self.color
-            self.point_2.set_form('blank')
-            self.point_2.size = self.width
-            self.point_2.color = self.color
-            self.form = 'fsolid'
-            return None
 
         for i in self.sim.points:
             if not (i == self.point_1 or i == self.point_2):
                 point:Point = i
-                if point.solid and point.move:
+                if point.solid:
                     if point_in_box(point.pos,self.point_1.pos,self.point_2.pos,point.size+self.width):
                         closest = closest_point_to(point.pos,self.point_1.pos,self.point_2.pos)
                         dist = closest.distance_to(point.pos)
@@ -476,23 +435,35 @@ class Line:
                             if not (self.point_1.move and self.point_2.move):
                                 p_frac = 1
                             else:
-                                p_frac = (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac)))/(point.weight + (2 * ((self.point_1.weight * (1-hit_frac)) + (self.point_1.weight * hit_frac))))
-                            
+                                if point.move:
+                                    p_frac = (2 * point.weight)/(2 * point.weight + self.point_1.weight * (1-hit_frac) + self.point_2.weight * hit_frac)
+                                else:
+                                    p_frac = 0
+
                             if not self.point_1.move:
                                 p1_frac = 1
                             else:
-                                p1_frac = (2 * self.point_1.weight)/(point.weight + (2 * self.point_1.weight))
+                                if point.move:
+                                    p1_frac = (2 * self.point_1.weight)/(point.weight + 2 * self.point_1.weight)
+                                else:
+                                    p1_frac = 0
                             
                             if not self.point_2.move:
                                 p2_frac = 1
                             else:
-                                p2_frac = (2 * self.point_2.weight)/(point.weight + (2 * self.point_2.weight))
+                                if point.move:
+                                    p2_frac = (2 * self.point_2.weight)/(point.weight + 2 * self.point_2.weight)
+                                else:
+                                    p2_frac = 0
                             
                             m_frac = ((self.width + point.size) / dist)
                             multi = (closest-closest*m_frac+point.pos*m_frac-point.pos)
-                            point.pos += multi*p_frac
-                            self.point_1.pos -= multi*(1-p1_frac)*(1-hit_frac)
-                            self.point_2.pos -= multi*(1-p2_frac)*(hit_frac)
+                            if point.move:
+                                point.pos += multi*(1-p_frac)
+                            if self.point_1.move:
+                                self.point_1.pos -= multi*(1-p1_frac)*(1-hit_frac)
+                            if self.point_2.move:
+                                self.point_2.pos -= multi*(1-p2_frac)*(hit_frac)
         
         self.update_rigid()
 

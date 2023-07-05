@@ -188,8 +188,8 @@ def add_point(pos):
         sim.points[-1].color = car_color
 
 
-def add_line(p1, p2, length, form="rigid"):
-    if key_down(pg.K_f):
+def add_line(p1, p2, length):
+    if  not point_ghost and point_fixed:
         sim.lines.append(
             sb.Line(
                 length,
@@ -202,7 +202,7 @@ def add_line(p1, p2, length, form="rigid"):
                 default_rigid_strength,
             )
         )
-    elif key_down(pg.K_r):
+    elif not point_fixed and not point_ghost:
         sim.lines.append(
             sb.Line(
                 length,
@@ -215,6 +215,19 @@ def add_line(p1, p2, length, form="rigid"):
                 default_rigid_strength,
             )
         )
+    elif point_fixed and point_ghost:
+        sim.lines.append(
+            sb.Line(
+                length,
+                p1,
+                p2,
+                spring_color,
+                line_width,
+                sim,
+                'spring',
+                default_spring_strength,
+            )
+        )
     else:
         sim.lines.append(
             sb.Line(
@@ -224,7 +237,7 @@ def add_line(p1, p2, length, form="rigid"):
                 line_color,
                 line_width,
                 sim,
-                form,
+                'rigid',
                 default_rigid_strength,
             )
         )
@@ -368,7 +381,7 @@ pre_focus_pos = Vector2(0, 0)
 focus = -1
 
 default_point_size = 30
-default_spring_strength = 15
+default_spring_strength = 5
 default_rigid_strength = 1
 
 
@@ -433,7 +446,6 @@ while running:
         for i in sim.lines:
             i: sb.Line
             i.length = i.point_1.pos.distance_to(i.point_2.pos)
-            i.length = solid_line_width*2
 
     if key_down(pg.K_BACKSPACE):
         running = False
@@ -499,20 +511,11 @@ while running:
                     touch = sim.mouse_point_touch()
                     if not touch == -1:
                         if not sim.points[touch] == l_add:
-                            if key_down(pg.K_LSHIFT):
-                                add_line(
-                                    l_add,
-                                    sim.points[touch],
-                                    sim.points[touch].pos.distance_to(l_add.pos),
-                                    "spring",
-                                )
-                                sim.lines[-1].color = spring_color
-                            else:
-                                add_line(
-                                    l_add,
-                                    sim.points[touch],
-                                    sim.points[touch].pos.distance_to(l_add.pos),
-                                )
+                            add_line(
+                                l_add,
+                                sim.points[touch],
+                                sim.points[touch].pos.distance_to(l_add.pos),
+                            )
 
             l_add = 0
             was_r = False

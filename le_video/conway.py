@@ -100,7 +100,7 @@ anim_delay = 0.4
 do_sim = True
 
 anim = Anim(renders,screen)
-anim.t = -10
+anim.t = -3
 pg.mouse.set_visible(False)
 last_step = 4
 first = True

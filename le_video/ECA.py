@@ -67,7 +67,7 @@ for i in range(length):
 
 anim = Anim(renders,screen)
 
-anim.t = -2
+anim.t = -4
 
 
 fps = 60

@@ -116,18 +116,7 @@ del pixels_yellow
 del pixels_immune
 
 
-#Creating background sprites
-background = pg.image.load("Background/background.png")
-fan = pg.image.load("Background/fan.png")
-fan_still = pg.image.load("Background/fan_still.png")
-fan_speed = 6
-fan_rot = 0
 
-
-#Image cache
-image_cache = []
-cached_sizes = []
-cached_images = []
 
 
 
@@ -250,6 +239,32 @@ cam_move_speed = 0.15
 cam_zoom_speed = 0.1
 
 
+
+#Creating background sprites
+background = pg.image.load("Background/background.png")
+fan = pg.image.load("Background/fan.png")
+fan_still = pg.image.load("Background/fan_still.png")
+fan_speed = 6
+fan_rot = 0
+
+bound_max = 2000
+bound_min = 500
+
+back_res = 20
+backgrounds = []
+back_sizes = []
+for i in range(900,2000,back_res):
+    back_sizes.append(i)
+    backgrounds.append([])
+    for n in range(90//fan_speed):
+        backgrounds[-1].append(pg.image.load(f'back_cache/back-{i}-{n}.bmp'))
+        
+
+
+
+
+
+
 # Slider funcs
 boundary_size = 1500
 
@@ -257,8 +272,8 @@ boundary_size = 1500
 def boundary_size_slider_func(set_get):
     global boundary_size
 
-    var_min = 500
-    var_max = 5000
+    var_min = bound_min
+    var_max = bound_max
     if set_get == "get":
         return (boundary_size - var_min) / (var_max - var_min)
     else:
@@ -1139,7 +1154,6 @@ def draw_sprite_team(x, y, dir, size, team, surfaces, rotate: bool = True):
 
 
 def draw_sprite(x, y, dir, size, surface, rotate: bool = True, alpha = 255, has_alpha = False):
-    global cached_images,image_cache,cached_sizes
     s_x = (x - cam_x) / zoom + (sw / 2)
     s_y = sh - ((y - cam_y) / zoom + (sh / 2))
     s_size = floor(round(size / zoom) * 2)
@@ -1148,19 +1162,7 @@ def draw_sprite(x, y, dir, size, surface, rotate: bool = True, alpha = 255, has_
     if not (
         s_x - s_size > sw or s_x + s_size < 0 or s_y - s_size > sh or s_y + s_size < 0
     ):
-        if surface in image_cache:
-            index = image_cache.index(surface)
-            if s_size in cached_sizes[index]:
-                image = cached_images[index][cached_sizes[index].index(s_size)]
-            else:
-                image = pg.transform.scale(surface,(floor(s_size),floor(s_size * (surface.get_height() / surface.get_width()))))
-                cached_sizes[index].append(s_size)
-                cached_images[index].append(image)
-        else:
-            image = pg.transform.scale(surface,(floor(s_size),floor(s_size * (surface.get_height() / surface.get_width()))))
-            image_cache.append(surface)
-            cached_sizes.append([s_size])
-            cached_images.append([image])
+        image = pg.transform.scale(surface,(floor(s_size),floor(s_size * (surface.get_height() / surface.get_width()))))
         
 
         if rotate:
@@ -1174,11 +1176,12 @@ def draw_sprite(x, y, dir, size, surface, rotate: bool = True, alpha = 255, has_
 
 def draw_background():
     global fan_rot, fan_speed
+    s_x = (-cam_x) / zoom + (sw / 2)
+    s_y = sh - ((-cam_y) / zoom + (sh / 2))
+    s_size = floor(round(boundary_size / zoom) * 2)
     fan_rot += fan_speed
     fan_rot %= 90
-    draw_sprite(0,0,0,boundary_size,background,False)
-    draw_sprite(0,0,fan_rot,boundary_size,fan,alpha=140,has_alpha=True)
-    draw_sprite(0,0,0,boundary_size,fan_still,False,alpha=140,has_alpha=True)
+    screen.blit(backgrounds[back_sizes.index(back_res*round(s_size/back_res))][fan_rot//fan_speed],(s_x,s_y))
 
 
 

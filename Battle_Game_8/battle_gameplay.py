@@ -241,6 +241,7 @@ cam_zoom_speed = 0.1
 
 
 #Creating background sprites
+has_background = False
 background = pg.image.load("Background/background.png")
 fan = pg.image.load("Background/fan.png")
 fan_still = pg.image.load("Background/fan_still.png")
@@ -250,14 +251,6 @@ fan_rot = 0
 bound_max = 2000
 bound_min = 500
 
-back_res = 20
-backgrounds = []
-back_sizes = []
-for i in range(900,2000,back_res):
-    back_sizes.append(i)
-    backgrounds.append([])
-    for n in range(90//fan_speed):
-        backgrounds[-1].append(pg.image.load(f'back_cache/back-{i}-{n}.bmp'))
         
 
 
@@ -1176,12 +1169,11 @@ def draw_sprite(x, y, dir, size, surface, rotate: bool = True, alpha = 255, has_
 
 def draw_background():
     global fan_rot, fan_speed
-    s_x = (-cam_x) / zoom + (sw / 2)
-    s_y = sh - ((-cam_y) / zoom + (sh / 2))
-    s_size = floor(round(boundary_size / zoom) * 2)
     fan_rot += fan_speed
     fan_rot %= 90
-    screen.blit(backgrounds[back_sizes.index(back_res*round(s_size/back_res))][fan_rot//fan_speed],(s_x,s_y))
+    draw_sprite(0,0,0,boundary_size,background)
+    draw_sprite(0,0,fan_rot,boundary_size,fan,True,140,True)
+    draw_sprite(0,0,0,boundary_size,fan_still,alpha=220,has_alpha=True)
 
 
 
@@ -2001,7 +1993,7 @@ damage_orb = SpecialGroup(False, False, "damage_orb")
 
 def game_tick(events):
     screen.fill(outside_color)
-    if developer_art:
+    if developer_art or (not has_background):
         draw_circle((0, 0), boundary_size, backdrop)
     else:
         draw_background()

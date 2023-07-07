@@ -334,7 +334,7 @@ class Button:
 
     def render(self):
         if self.show:
-            if type(self.icon) != list or type(self.icon) != tuple:
+            if not (type(self.icon) == list or type(self.icon) == tuple):
                 self.icon = str(self.icon)
                 draw_text_box(
                     self.menu.screen,
@@ -431,7 +431,7 @@ class Slider:
         Updates the slider, called by parent menu
         """
         if self.font == None:
-            self.font = pg.font.Font(default_font, math.floor(self.scr_rect().h * text_box_size))
+            self.font = pg.font.Font(default_font, math.floor(self.scr_rect().h * text_box_size * slider_text_height))
         set_cursor = None
         if self.scr_rect().collidepoint(pg.mouse.get_pos()):
             set_cursor = pg.SYSTEM_CURSOR_HAND
@@ -449,7 +449,7 @@ class Slider:
     def render(self):
         if self.show:
             # Box
-            if type(self.icon) != list or type(self.icon) != tuple:
+            if not (type(self.icon) == list or type(self.icon) == tuple):
                 self.icon = str(self.icon)
                 draw.rect(
                     self.menu.screen,

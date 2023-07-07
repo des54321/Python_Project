@@ -151,7 +151,7 @@ key_mapping = {
 keyboard_controls = (
     (pg.K_w, pg.K_d, pg.K_s, pg.K_a, pg.K_SPACE, pg.K_n, pg.K_m, pg.K_LSHIFT),
     (pg.K_i, pg.K_l, pg.K_k, pg.K_j, pg.K_RALT, pg.K_KP1, pg.K_KP3, pg.K_KP_ENTER),
-    (pg.K_UP, pg.K_RIGHT, pg.K_DOWN, pg.K_LEFT, pg.K_t, pg.K_r, pg.K_h, pg.K_KP0),
+    (pg.K_UP, pg.K_RIGHT, pg.K_DOWN, pg.K_LEFT, pg.K_t, pg.K_r, pg.K_h, pg.K_KP0)
 )
 
 
@@ -805,6 +805,12 @@ game_menu = Menu(
     0,
     [fps_counter, things_counter, pause_button],
 )
+
+
+
+#Stats menu
+
+stats_menu = Menu
 
 
 # Viva el fuctions, yay
@@ -1633,8 +1639,7 @@ class Player:
         self.health = group.max_health
         self.movement = control_scheme
         self.vel = Vector2(0, 0)
-        self.barrel = Vector2()
-        self.barrel.from_polar((self.type.size * 2, 0))
+        self.barrel = Vector2(0, self.type.size * 2)
         self.timer = 0
         self.left = 0
         self.wait = 0
@@ -1744,7 +1749,10 @@ class Player:
                     if target.x > self.x:
                         self.vel.x -= self.type.move_speed
             self.barrel = dir
-            self.barrel.scale_to_length(self.type.size * 2)
+            if self.barrel.length() < 1:
+                self.barrel = Vector2(self.type.size*2,0)
+            else:
+                self.barrel.scale_to_length(self.type.size * 2)
             if self.immunity <= 0:
                 if self.timer <= 0:
                     self.timer = self.type.reload_time

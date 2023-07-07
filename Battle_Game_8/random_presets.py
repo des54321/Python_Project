@@ -1,0 +1,1 @@
+team_names = ("red", "green", "blue", "yellow")

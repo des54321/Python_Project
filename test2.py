@@ -1,1 +1,3 @@
-print([[2,3]]*4)
+from test3 import a
+b = 4
+print('test2')

@@ -116,6 +116,23 @@ del pixels_yellow
 del pixels_immune
 
 
+#Creating background sprites
+background = pg.image.load("Background/background.png")
+fan = pg.image.load("Background/fan.png")
+fan_still = pg.image.load("Background/fan_still.png")
+fan_speed = 6
+fan_rot = 0
+
+
+#Image cache
+image_cache = []
+cached_sizes = []
+cached_images = []
+
+
+
+
+
 """
 Setting up controller support
 """
@@ -1108,10 +1125,7 @@ def draw_tank_base(size, type, barrel: Vector2, team, x, y, scr=False):
     screen.blit(top, (s_x - (top.get_width() // 2), s_y - (top.get_height() // 2)))
 
 
-def draw_sprite(x, y, dir, size, team, surfaces, rotate: bool = True):
-    s_x = (x - cam_x) / zoom + (sw / 2)
-    s_y = sh - ((y - cam_y) / zoom + (sh / 2))
-    s_size = round(size / zoom) * 2
+def draw_sprite_team(x, y, dir, size, team, surfaces, rotate: bool = True):
     if team == "red":
         index = 0
     elif team == "green":
@@ -1120,26 +1134,52 @@ def draw_sprite(x, y, dir, size, team, surfaces, rotate: bool = True):
         index = 2
     elif team == "yellow":
         index = 3
+    draw_sprite(x,y,dir,size,surfaces[index],rotate)
+    
+
+
+def draw_sprite(x, y, dir, size, surface, rotate: bool = True, alpha = 255, has_alpha = False):
+    global cached_images,image_cache,cached_sizes
+    s_x = (x - cam_x) / zoom + (sw / 2)
+    s_y = sh - ((y - cam_y) / zoom + (sh / 2))
+    s_size = floor(round(size / zoom) * 2)
+
+
     if not (
         s_x - s_size > sw or s_x + s_size < 0 or s_y - s_size > sh or s_y + s_size < 0
     ):
-        # image = pg.transform.rotate(surfaces[index],dir)
-        # image = pg.transform.scale(image,(floor(s_size),floor(s_size*(surfaces[index].get_height()/surfaces[index].get_width()))))
-        image = pg.transform.scale(
-            surfaces[index],
-            (
-                floor(s_size),
-                floor(
-                    s_size
-                    * (surfaces[index].get_height() / surfaces[index].get_width())
-                ),
-            ),
-        )
+        if surface in image_cache:
+            index = image_cache.index(surface)
+            if s_size in cached_sizes[index]:
+                image = cached_images[index][cached_sizes[index].index(s_size)]
+            else:
+                image = pg.transform.scale(surface,(floor(s_size),floor(s_size * (surface.get_height() / surface.get_width()))))
+                cached_sizes[index].append(s_size)
+                cached_images[index].append(image)
+        else:
+            image = pg.transform.scale(surface,(floor(s_size),floor(s_size * (surface.get_height() / surface.get_width()))))
+            image_cache.append(surface)
+            cached_sizes.append([s_size])
+            cached_images.append([image])
+        
+
         if rotate:
             image = pg.transform.rotate(image, dir)
+        if has_alpha:
+            image.set_alpha(alpha)
         screen.blit(
             image, (s_x - (image.get_width() // 2), s_y - (image.get_height() // 2))
         )
+
+
+def draw_background():
+    global fan_rot, fan_speed
+    fan_rot += fan_speed
+    fan_rot %= 90
+    draw_sprite(0,0,0,boundary_size,background,False)
+    draw_sprite(0,0,fan_rot,boundary_size,fan,alpha=140,has_alpha=True)
+    draw_sprite(0,0,0,boundary_size,fan_still,False,alpha=140,has_alpha=True)
+
 
 
 """
@@ -1302,7 +1342,7 @@ class Special:
                 # draw_circle([self.x,self.y],self.type.radius,self.type.damage_color,self.type.size//2)
         else:
             if self.type == small_turret:
-                draw_sprite(
+                draw_sprite_team(
                     self.x,
                     self.y,
                     (self.barrel.angle_to(Vector2(0, 0)) * -1) - 90,
@@ -1312,7 +1352,7 @@ class Special:
                 )
 
             if self.type == damage_orb:
-                draw_sprite(
+                draw_sprite_team(
                     self.x,
                     self.y,
                     (self.vel.angle_to(Vector2(0, 0)) * -1) - 90,
@@ -1419,7 +1459,7 @@ class Bullet:
         else:
             if self.bullet_type == mine:
                 if self.time_left > 600:
-                    draw_sprite(
+                    draw_sprite_team(
                         self.x,
                         self.y,
                         (self.vel.angle_to(Vector2(0, 0)) * -1) - 90,
@@ -1429,7 +1469,7 @@ class Bullet:
                         not (self.bullet_type == mine or self.bullet_type == mini_mine),
                     )
                 else:
-                    draw_sprite(
+                    draw_sprite_team(
                         self.x,
                         self.y,
                         (self.vel.angle_to(Vector2(0, 0)) * -1) - 90,
@@ -1439,7 +1479,7 @@ class Bullet:
                         not (self.bullet_type == mine or self.bullet_type == mini_mine),
                     )
             else:
-                draw_sprite(
+                draw_sprite_team(
                     self.x,
                     self.y,
                     (self.vel.angle_to(Vector2(0, 0)) * -1) - 90,
@@ -1958,7 +1998,10 @@ damage_orb = SpecialGroup(False, False, "damage_orb")
 
 def game_tick(events):
     screen.fill(outside_color)
-    draw_circle((0, 0), boundary_size, backdrop)
+    if developer_art:
+        draw_circle((0, 0), boundary_size, backdrop)
+    else:
+        draw_background()
     # draw_grid()
     adjust_camera()
     move_players()

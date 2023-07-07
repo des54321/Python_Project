@@ -89,8 +89,8 @@ def is_in(x : int, y : int) -> bool:
     return True
 
 
-gw = 80
-gh = 45
+gw = 96
+gh = 54
 
 grid = np.zeros((gw,gh),int)
 grid_vels = np.zeros((gw,gh,2),int)
@@ -108,7 +108,7 @@ pre_m_pos = [0,0]
 grav = 20
 grav_timer = 0
 
-sim_cycle = 20
+sim_cycle = 5
 sim_timer = 0
 
 
@@ -163,4 +163,5 @@ while running:
 
     pg.display.update()
     fps_clock.tick(fps)
+    print(int(fps_clock.get_fps()))
 pg.quit()

@@ -7,6 +7,7 @@ from random import random
 import copy
 import menu_engine
 from menu_engine import Menu, Button, Slider, Text
+import pickle
 
 
 pg.init()
@@ -233,7 +234,7 @@ def reset_stats():
 # Settings/set-up
 
 # Graphics
-outside_color = (20, 5, 13)
+outside_color = (17, 15, 20)
 backdrop = (240, 250, 230)
 healthbar_color = (50, 240, 100)
 special_ready_color = (160, 30, 150)
@@ -257,9 +258,47 @@ cam_zoom_speed = 0.1
 has_background = False
 background = pg.image.load("Background/background.png")
 fan = pg.image.load("Background/fan.png")
+fan.set_alpha(120)
 fan_still = pg.image.load("Background/fan_still.png")
+fan_still.set_alpha(140)
 fan_speed = 6
 fan_rot = 0
+
+
+ez_back_opacity = 240
+
+ez_back = pg.Surface((128,128))
+ez_back.fill(outside_color)
+ez_back.blit(background,(0,0))
+ez_back.blit(fan,(0,0))
+ez_back.blit(fan_still,(0,0))
+
+ez_back_filler = pg.Surface((128,128))
+ez_back_filler.fill(outside_color)
+ez_back_filler.set_alpha(255-ez_back_opacity)
+ez_back.blit(ez_back_filler,(0,0))
+
+ez_back.convert(screen)
+
+ez_cache_images = []
+ez_cache_size = []
+
+cache_res = 5
+
+with open('auto_cache.pkl','rb') as load:
+    ez_cache_size = pickle.load(load)
+
+start_cache_size = len(ez_cache_size)
+
+
+
+loading_font = pg.font.Font(menu_engine.default_font,100)
+for i in ez_cache_size:
+    image = pg.transform.scale(ez_back,(i,i))
+    ez_cache_images.append(image)
+    screen.fill(color_pal[0])
+    menu_engine.draw_text(screen,pg.Rect(sw/2-400,sh/2-100,800,200),f'Loading: {round((ez_cache_size.index(i)/len(ez_cache_size))*100)}%',loading_font,True,color_pal[2],'left','center')
+    pg.display.update()
 
 bound_max = 2000
 bound_min = 500
@@ -406,6 +445,23 @@ def smart_bots_slider_func(set_get):
         smart_bots_val = round(var_min + ((var_max - var_min) * set_get))
 
     smart_bots = smart_bots_val > 0.5
+
+
+bot_keyboard_val = 0
+bot_keyboard = False
+
+
+def bot_keyboard_slider_func(set_get):
+    global bot_keyboard, bot_keyboard_val
+
+    var_min = 0
+    var_max = 1
+    if set_get == "get":
+        return (bot_keyboard_val - var_min) / (var_max - var_min)
+    else:
+        bot_keyboard_val = round(var_min + ((var_max - var_min) * set_get))
+    
+    bot_keyboard = bot_keyboard_val > 0.5
 
 
 
@@ -788,7 +844,14 @@ smart_bots_slider = Slider(
     smart_bots_slider_func,
     5,
 )
-
+bot_keyboard_slider = Slider(
+    "Keyboard Bots",
+    (color_pal[1], color_pal[3], color_pal[2]),
+    Vector2(0.55, 0.8),
+    Vector2(0.3, 0.1),
+    bot_keyboard_slider_func,
+    5,
+)
 
 back_button_settings = Button(
     [
@@ -837,7 +900,8 @@ settings_menu = Menu(
         bot_target_dist_slider,
         bots_slider,
         bot_rand_slider,
-        smart_bots_slider
+        smart_bots_slider,
+        bot_keyboard_slider
     ],
 )
 
@@ -940,6 +1004,16 @@ stats_menu = Menu(
 
 
 # Viva el fuctions, yay
+
+
+def update_cache():
+    global start_cache_size
+    if len(ez_cache_size)-start_cache_size > 5:
+        start_cache_size = len(ez_cache_size)
+        declare(f'NCS: {len(ez_cache_size)}')
+        with open('auto_cache.pkl', 'wb') as save:
+            pickle.dump(ez_cache_size,save,protocol=5)
+
 
 
 def update_stats():
@@ -1306,7 +1380,7 @@ def draw_sprite_team(x, y, dir, size, team, surfaces, rotate: bool = True):
     
 
 
-def draw_sprite(x, y, dir, size, surface, rotate: bool = True, alpha = 255, has_alpha = False):
+def draw_sprite(x, y, dir, size, surface, rotate: bool = True):
     s_x = (x - cam_x) / zoom + (sw / 2)
     s_y = sh - ((y - cam_y) / zoom + (sh / 2))
     s_size = floor(round(size / zoom) * 2)
@@ -1320,8 +1394,6 @@ def draw_sprite(x, y, dir, size, surface, rotate: bool = True, alpha = 255, has_
 
         if rotate:
             image = pg.transform.rotate(image, dir)
-        if has_alpha:
-            image.set_alpha(alpha)
         screen.blit(
             image, (s_x - (image.get_width() // 2), s_y - (image.get_height() // 2))
         )
@@ -1332,8 +1404,30 @@ def draw_background():
     fan_rot += fan_speed
     fan_rot %= 90
     draw_sprite(0,0,0,boundary_size,background)
-    draw_sprite(0,0,fan_rot,boundary_size,fan,True,140,True)
-    draw_sprite(0,0,0,boundary_size,fan_still,alpha=220,has_alpha=True)
+    draw_sprite(0,0,fan_rot,boundary_size,fan,True)
+    draw_sprite(0,0,0,boundary_size,fan_still)
+
+
+def draw_ez_back():
+    s_x = (-cam_x) / zoom + (sw / 2)
+    s_y = sh - ((-cam_y) / zoom + (sh / 2))
+    s_size = (boundary_size / zoom)*2
+    s_size = round(s_size/cache_res)*cache_res
+    if s_size in ez_cache_size:
+        image = ez_cache_images[ez_cache_size.index(s_size)]
+    else:
+        image = pg.transform.scale(ez_back,(s_size,s_size))
+        ez_cache_size.append(s_size)
+        ez_cache_images.append(image)
+    screen.blit(image,(s_x - s_size//2, s_y - s_size//2))
+
+
+def clear_cache():
+    global ez_cache_size, ez_cache_images
+    ez_cache_images = []
+    ez_cache_size = []
+    with open('auto_cache.pkl', 'wb') as save:
+        pickle.dump(ez_cache_size,save,protocol=5)
 
 
 
@@ -1915,13 +2009,19 @@ class Player:
         self.bot_move(dist,target)
         if dir.length() < 1:
             dir = Vector2(1,0)
-        dir.normalize_ip()
-        dot = self.barrel.x*(dir.y)+self.barrel.y*(-dir.x)
-        if abs(dot) > self.type.size * 0.2:
-            if dot > 0:
-                self.barrel.rotate_ip(keyboard_barrel_rot_speed)
-            else:
-                self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
+        if bot_keyboard:
+            dir.normalize_ip()
+            dot = self.barrel.x*(dir.y)+self.barrel.y*(-dir.x)
+            if abs(dot) > self.type.size * 0.2:
+                if dot > 0:
+                    self.barrel.rotate_ip(keyboard_barrel_rot_speed)
+                else:
+                    self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
+        else:
+            self.barrel = dir
+            if self.barrel.length() < 1:
+                self.barrel = Vector2(self.type.size*2,0)
+            self.barrel.scale_to_length(self.type.size)
 
         
         if self.immunity <= 0:
@@ -1962,19 +2062,25 @@ class Player:
             self.bot_move(dist,target)
         toward_pos = (
             Vector2(target.x, target.y)
-            + (target.vel / (self.type.fires.speed**1.5))
-            * Vector2((target.x - self.x), (target.y - self.y)).length()
+            + (target.vel / max(self.type.fires.speed,15))
+            * min(Vector2((target.x - self.x), (target.y - self.y)).length(),400)
         )
+
         dir = toward_pos - Vector2(self.x, self.y)
-        if dir.length() < 1:
-            dir = Vector2(1,0)
-        dir.normalize_ip()
-        dot = self.barrel.x*(dir.y)+self.barrel.y*(-dir.x)
-        if abs(dot) > self.type.size * 0.2:
-            if dot > 0:
-                self.barrel.rotate_ip(keyboard_barrel_rot_speed)
-            else:
-                self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
+        if bot_keyboard:
+            dir.normalize_ip()
+            dot = self.barrel.x*(dir.y)+self.barrel.y*(-dir.x)
+            if abs(dot) > self.type.size * 0.2:
+                if dot > 0:
+                    self.barrel.rotate_ip(keyboard_barrel_rot_speed)
+                else:
+                    self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
+        else:
+            self.barrel = dir
+            if self.barrel.length() < 1:
+                self.barrel = Vector2(self.type.size*2,0)
+            self.barrel.scale_to_length(self.type.size)
+        
         if self.immunity <= 0:
             if self.timer <= 0:
                 self.timer = self.type.reload_time
@@ -2120,16 +2226,16 @@ class Player:
 
 
 # Bullet Types
-blaster_bolt = BulletGroup("blaster_bolt", 8, 13, 12, (40, 200, 40), 0.4, 240)
-tank_shell = BulletGroup("tank_shell", 18, 12, 15, (40, 60, 100), 0.1, 300)
+blaster_bolt = BulletGroup("blaster_bolt", 8, 15, 12, (40, 200, 40), 0.4, 240)
+tank_shell = BulletGroup("tank_shell", 25, 10, 15, (40, 60, 100), 0.1, 300)
 spin_char_bullet = BulletGroup("spin_char_bullet", 6, 15, 20, (50, 200, 50), 1.4, 100)
-shotgun_pellet = BulletGroup("shotgun_pellet", 4, 16, 8, (150, 150, 150), 0, 40)
+shotgun_pellet = BulletGroup("shotgun_pellet", 4, 18, 8, (150, 150, 150), 0, 30)
 mine = BulletGroup("mine", 100, 10, 35, (240, 50, 50), 0, 800)
 mini_mine = BulletGroup("mini_mine", 20, 30, 25, (230, 150, 150), 0, 500)
 shotgun_bomb = BulletGroup("shotgun_bomb", 75, 12, 50, (210, 240, 100), 0, 60)
 shrapnel = BulletGroup("shrapnel", 30, 20, 15, (105, 120, 50), 0, 40)
 speed_pellet = BulletGroup("speed_pellet", 4, 12, 6, (200, 40, 200), 0, 120)
-speed_big_pellet = BulletGroup("speed_big_pellet", 10, 15, 10, (100, 20, 100), 1, 25)
+speed_big_pellet = BulletGroup("speed_big_pellet", 10, 18, 10, (100, 20, 100), 1, 25)
 rotator = BulletGroup("rotator", 35, 100, 20, (120, 200, 255), 0, 350)
 cloner_bullet = BulletGroup("cloner_bullet", 3, 12, 6, (20, 20, 20), 0.2, 200)
 turret_bullet = BulletGroup("turret_bullet", 4, 18, 10, (20, 128, 128), 0, 100)
@@ -2148,8 +2254,8 @@ shotgun_char = PlayerCharacter(
     (240, 240, 40),
     shotgun_pellet,
     1200,
-    10,
-    4,
+    13,
+    3,
     "Shotgun",
 )
 blaster_char = PlayerCharacter(
@@ -2232,10 +2338,14 @@ damage_orb = SpecialGroup(False, False, "damage_orb")
 
 def game_tick(events):
     screen.fill(outside_color)
-    if developer_art or (not has_background):
+    if developer_art:
         draw_circle((0, 0), boundary_size, backdrop)
-    else:
+    elif has_background:
         draw_background()
+    else:
+        draw_ez_back()
+    
+    update_cache()
     # draw_grid()
     adjust_camera()
     move_players()
@@ -2298,6 +2408,9 @@ if __name__ == "__main__":
 
         screen.fill((0, 0, 0))
         if current_page == "start":
+            if key_down(pg.K_LCTRL) and key_down(pg.K_c):
+                clear_cache()
+                declare('Cleared Cache')
             start_menu.full_update(events)
         elif current_page == "char_select":
             update_player_menus()

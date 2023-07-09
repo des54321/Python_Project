@@ -1454,7 +1454,7 @@ class SpecialGroup:
         if kind == "damage_orb":
             self.speed = 8
             self.damage = 0.5
-            self.life_time = 1000
+            self.life_time = 500
             self.radius = 230
             self.size = 35
             self.color = (80, 10, 20)
@@ -2021,7 +2021,7 @@ class Player:
             self.barrel = dir
             if self.barrel.length() < 1:
                 self.barrel = Vector2(self.type.size*2,0)
-            self.barrel.scale_to_length(self.type.size)
+            self.barrel.scale_to_length(self.type.size*2)
 
         
         if self.immunity <= 0:
@@ -2079,7 +2079,7 @@ class Player:
             self.barrel = dir
             if self.barrel.length() < 1:
                 self.barrel = Vector2(self.type.size*2,0)
-            self.barrel.scale_to_length(self.type.size)
+            self.barrel.scale_to_length(self.type.size*2)
         
         if self.immunity <= 0:
             if self.timer <= 0:
@@ -2226,7 +2226,7 @@ class Player:
 
 
 # Bullet Types
-blaster_bolt = BulletGroup("blaster_bolt", 8, 15, 12, (40, 200, 40), 0.4, 240)
+blaster_bolt = BulletGroup("blaster_bolt", 7, 12, 12, (40, 200, 40), 0.35, 240)
 tank_shell = BulletGroup("tank_shell", 25, 10, 15, (40, 60, 100), 0.1, 300)
 spin_char_bullet = BulletGroup("spin_char_bullet", 6, 15, 20, (50, 200, 50), 1.4, 100)
 shotgun_pellet = BulletGroup("shotgun_pellet", 4, 18, 8, (150, 150, 150), 0, 30)
@@ -2239,7 +2239,7 @@ speed_big_pellet = BulletGroup("speed_big_pellet", 10, 18, 10, (100, 20, 100), 1
 rotator = BulletGroup("rotator", 35, 100, 20, (120, 200, 255), 0, 350)
 cloner_bullet = BulletGroup("cloner_bullet", 3, 12, 6, (20, 20, 20), 0.2, 200)
 turret_bullet = BulletGroup("turret_bullet", 4, 18, 10, (20, 128, 128), 0, 100)
-small_orb = BulletGroup("small_orb", 12, 13, 20, (80, 0, 200), 0.75, 130)
+small_orb = BulletGroup("small_orb", 15, 17, 20, (80, 0, 200), 0.1, 100)
 
 
 # Player Characters
@@ -2261,10 +2261,10 @@ shotgun_char = PlayerCharacter(
 blaster_char = PlayerCharacter(
     "blaster_char",
     25,
-    40,
+    50,
     3,
     0.7,
-    30,
+    45,
     (200, 30, 30),
     blaster_bolt,
     1200,

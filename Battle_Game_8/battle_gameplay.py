@@ -64,6 +64,7 @@ blue_team_hue = 210
 yellow_team_hue = 40
 
 bot_happy_dist = 50
+smart_bot_avoidance = 4
 
 
 red_tank_base = pg.image.load("Tanks/tank_bottom.png")
@@ -217,6 +218,18 @@ def go_to_start():
     current_page = "start"
 
 
+def go_to_stats():
+    global current_page
+    current_page = 'stats'
+
+
+def reset_stats():
+    global team_stats
+    team_stats = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    for i in players:
+        team_stats[team_to_num(i.team)][2] += 1
+
+
 # Settings/set-up
 
 # Graphics
@@ -363,6 +376,39 @@ def bots_slider_func(set_get):
     bots = round(bots)
 
 
+bot_rand = 2
+
+
+def bot_rand_slider_func(set_get):
+    global bot_rand
+
+    var_min = 0
+    var_max = 10
+    if set_get == "get":
+        return (bot_rand - var_min) / (var_max - var_min)
+    else:
+        bot_rand = var_min + ((var_max - var_min) * set_get)
+
+
+smart_bots_val = 0
+smart_bots = False
+
+
+def smart_bots_slider_func(set_get):
+    global smart_bots_val
+    global smart_bots
+
+    var_min = 0
+    var_max = 1
+    if set_get == "get":
+        return (smart_bots_val - var_min) / (var_max - var_min)
+    else:
+        smart_bots_val = round(var_min + ((var_max - var_min) * set_get))
+
+    smart_bots = smart_bots_val > 0.5
+
+
+
 # Char select funcs
 
 
@@ -455,7 +501,7 @@ specials = []
 
 # Team data (red,green,blue,yellow) (kills,killed,players)
 team_names = ("red", "green", "blue", "yellow")
-teams = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+team_stats = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
 
 # Gotta love UI, right, RIGHT?
@@ -509,6 +555,16 @@ char_select_button = Button(
 title_text = Text(
     "Battle Game", (color_pal[0], color_pal[2]), (0.4, 0.1), (0.4, 0.2), False
 )
+stats_button = Button(
+    "Stats ",
+    (color_pal[1], color_pal[2]),
+    (-0.05, 0.85),
+    (0.3, 0.1),
+    go_to_stats,
+    "press",
+    15,
+    text_pos=["right", "center"],
+)
 
 start_menu = Menu(
     screen,
@@ -518,7 +574,7 @@ start_menu = Menu(
     sh,
     color_pal[0],
     0,
-    [start_button, title_text, settings_button_main, char_select_button],
+    [start_button, title_text, settings_button_main, char_select_button,stats_button],
 )
 
 
@@ -716,6 +772,22 @@ bots_slider = Slider(
     bots_slider_func,
     5,
 )
+bot_rand_slider = Slider(
+    "Bot Rand",
+    (color_pal[1], color_pal[3], color_pal[2]),
+    Vector2(0.55, 0.5),
+    Vector2(0.3, 0.1),
+    bot_rand_slider_func,
+    5,
+)
+smart_bots_slider = Slider(
+    "Smart Bots",
+    (color_pal[1], color_pal[3], color_pal[2]),
+    Vector2(0.55, 0.65),
+    Vector2(0.3, 0.1),
+    smart_bots_slider_func,
+    5,
+)
 
 
 back_button_settings = Button(
@@ -764,6 +836,8 @@ settings_menu = Menu(
         rep_imm_slider,
         bot_target_dist_slider,
         bots_slider,
+        bot_rand_slider,
+        smart_bots_slider
     ],
 )
 
@@ -810,10 +884,70 @@ game_menu = Menu(
 
 #Stats menu
 
-stats_menu = Menu
+red_team_lable = Text('Red',(None,color_pal[2]),(0.2,0.15),(0.1,0.1),False)
+green_team_lable = Text('Green',(None,color_pal[2]),(0.4,0.15),(0.1,0.1),False)
+blue_team_lable = Text('Blue',(None,color_pal[2]),(0.6,0.15),(0.1,0.1),False)
+yellow_team_lable = Text('Yellow',(None,color_pal[2]),(0.8,0.15),(0.1,0.1),False)
+
+kills_lable = Text('Kills:',(None,color_pal[1]),(0,0.3),(0.2,0.1),False,0,True,('right','center'))
+
+team_kills = []
+for i in range(4):
+    team_kills.append(Text('0',(None,color_pal[3]),(i*0.2+0.2,0.3),(0.1,0.1),False))
+
+deaths_lable = Text('Deaths:',(None,color_pal[1]),(0,0.5),(0.2,0.1),False,0,True,('right','center'))
+
+team_deaths = []
+for i in range(4):
+    team_deaths.append(Text('0',(None,color_pal[3]),(i*0.2+0.2,0.5),(0.1,0.1),False))
+
+
+reset_stats_button = Button('Reset',(color_pal[1],color_pal[2]),(0.4,0.8),(0.2,0.1),reset_stats,'press',10)
+    
+
+
+back_button_stats = Button(
+    [
+        [
+            (0.9, 0.4),
+            (0.9, 0.6),
+            (0.35, 0.6),
+            (0.35, 0.85),
+            (0.05, 0.55),
+            (0.05, 0.45),
+            (0.35, 0.15),
+            (0.35, 0.4),
+        ]
+    ],
+    (color_pal[0], color_pal[1]),
+    Vector2(0.05, 0.05),
+    Vector2(0.075, 0.1),
+    go_to_start,
+    "press",
+    5,
+)
+
+stats_menu = Menu(
+    screen,
+    Vector2(0, 0),
+    Vector2(0, sh),
+    sw,
+    sh,
+    color_pal[0],
+    0,
+    [red_team_lable,green_team_lable,blue_team_lable,yellow_team_lable,back_button_stats,kills_lable,deaths_lable,reset_stats_button]+team_kills+team_deaths
+)
 
 
 # Viva el fuctions, yay
+
+
+def update_stats():
+    for n,i in enumerate(team_kills):
+        i.text = str(team_stats[n][0])
+    for n,i in enumerate(team_deaths):
+        i.text = str(team_stats[n][1])
+
 
 
 def reset_players():
@@ -847,17 +981,37 @@ def players_in_radius(pos, radius: float, not_included=0):
     return in_radius
 
 
-def closest_player(pos, not_included=0, is_max=False):
+def closest_player(pos, not_included=0, is_max=False,is_rand=False,rand=0):
     distances = []
     for i in players:
         if i.team == not_included:
             distances.append(10000000)
         else:
-            distances.append(math.dist([i.x, i.y], pos))
+            if is_rand:
+                distances.append(math.dist([i.x, i.y], pos)+random()*rand)
+            else:
+                distances.append(math.dist([i.x, i.y], pos))
     if is_max:
         return players[distances.index(max(distances))]
     else:
         return players[distances.index(min(distances))]
+
+
+def closest_bullet(pos, not_included=0, is_max=False,is_rand=False,rand=0):
+    distances = []
+    for i in bullets:
+        i:Bullet
+        if i.came_from.team == not_included:
+            distances.append(10000000)
+        else:
+            if is_rand:
+                distances.append(math.dist([i.x, i.y], pos)+random()*rand)
+            else:
+                distances.append(math.dist([i.x, i.y], pos))
+    if is_max:
+        return bullets[distances.index(max(distances))]
+    else:
+        return bullets[distances.index(min(distances))]
 
 
 def fire_bullet(
@@ -966,8 +1120,8 @@ def collide_bullets():
                         # Death message + death counter
                         if p.health <= 0 and not p.dead:
                             declare(f"{b.came_from.team} killed a {p.team}")
-                            teams[team_to_num(b.came_from.team)][0] += 1
-                            teams[team_to_num(p.team)][1] += 1
+                            team_stats[team_to_num(b.came_from.team)][0] += 1
+                            team_stats[team_to_num(p.team)][1] += 1
                             p.dead = True
 
                         if b in bullets:
@@ -1610,7 +1764,7 @@ class PlayerCharacter:
             if player.left > 0:
                 player.left -= 1
                 player.vel = Vector2(0, 0)
-                player.timer -= 6
+                player.timer -= 4
         if self == spin_char:
             if player.left > 0:
                 if player.wait <= 0:
@@ -1646,7 +1800,7 @@ class Player:
         self.cool_down = self.type.special_cooldown
         self.immunity = respawn_immunity // 3
         self.dead = False
-        teams[team_to_num(team)][2] += 1
+        team_stats[team_to_num(team)][2] += 1
 
     def move(self) -> None:
         self.x += self.vel.x
@@ -1654,120 +1808,14 @@ class Player:
         self.vel.x *= self.type.drift
         self.vel.y *= self.type.drift
         if self.movement[0] == "keyboard":
-            if key_down(keyboard_controls[self.movement[1]][0]):
-                self.vel.y += self.type.move_speed
-            if key_down(keyboard_controls[self.movement[1]][1]):
-                self.vel.x += self.type.move_speed
-            if key_down(keyboard_controls[self.movement[1]][2]):
-                self.vel.y -= self.type.move_speed
-            if key_down(keyboard_controls[self.movement[1]][3]):
-                self.vel.x -= self.type.move_speed
-            if key_down(keyboard_controls[self.movement[1]][5]):
-                self.barrel.rotate_ip(keyboard_barrel_rot_speed)
-            if key_down(keyboard_controls[self.movement[1]][6]):
-                self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
-            if self.immunity <= 0:
-                if key_down(keyboard_controls[self.movement[1]][4]):
-                    if self.timer <= 0:
-                        self.timer = self.type.reload_time
-                        fire_bullet(
-                            self.x + self.barrel.x,
-                            self.y + self.barrel.y,
-                            self.type.fires,
-                            Vector2(0, 0).angle_to(self.barrel),
-                            self.type.spread,
-                            self.type.amount,
-                            self,
-                        )
-                if key_down(keyboard_controls[self.movement[1]][7]):
-                    if self.cool_down <= 0:
-                        self.cool_down = self.type.special_cooldown
-                        self.type.init_special_use(self)
+            self.control_keyboard()
         elif self.movement[0] == "controller":
-            if self.immunity <= 0:
-                if controller_input[self.movement[1]][17][1]:
-                    if self.timer <= 0:
-                        self.timer = self.type.reload_time
-                        fire_bullet(
-                            self.x + self.barrel.x,
-                            self.y + self.barrel.y,
-                            self.type.fires,
-                            Vector2(0, 0).angle_to(self.barrel),
-                            self.type.spread,
-                            self.type.amount,
-                            self,
-                        )
-                if controller_input[self.movement[1]][17][0]:
-                    if self.cool_down <= 0:
-                        self.cool_down = self.type.special_cooldown
-                        self.type.init_special_use(self)
-            if aim_type == 1:
-                if (
-                    controller_input[self.movement[1]][16][0] == 0
-                    and controller_input[self.movement[1]][16][1] == 0
-                ):
-                    self.barrel = Vector2(0, self.type.size * 2)
-                else:
-                    new = Vector2(
-                        controller_input[self.movement[1]][16][0],
-                        -controller_input[self.movement[1]][16][1],
-                    )
-                    new.scale_to_length(self.type.size * 2)
-                    self.barrel = new
-            else:
-                self.barrel.rotate_ip(
-                    controller_input[self.movement[1]][16][0]
-                    * -controller_barrel_rot_speed
-                )
-            self.vel.x += (
-                self.type.move_speed * controller_input[self.movement[1]][15][0]
-            )
-            self.vel.y -= (
-                self.type.move_speed * controller_input[self.movement[1]][15][1]
-            )
+            self.control_controller()
         elif self.movement[0] == "bot":
-            target = closest_player(Vector2(self.x, self.y), self.team)
-            dist = Vector2(self.x, self.y).distance_to(Vector2(target.x, target.y))
-            dir = Vector2(target.x, target.y) - Vector2(self.x, self.y)
-            if abs(dist - bot_target_dist) > bot_happy_dist:
-                if dist > bot_target_dist:
-                    if target.y > self.y:
-                        self.vel.y += self.type.move_speed
-                    if target.x > self.x:
-                        self.vel.x += self.type.move_speed
-                    if target.y < self.y:
-                        self.vel.y -= self.type.move_speed
-                    if target.x < self.x:
-                        self.vel.x -= self.type.move_speed
-                else:
-                    if target.y < self.y:
-                        self.vel.y += self.type.move_speed
-                    if target.x < self.x:
-                        self.vel.x += self.type.move_speed
-                    if target.y > self.y:
-                        self.vel.y -= self.type.move_speed
-                    if target.x > self.x:
-                        self.vel.x -= self.type.move_speed
-            self.barrel = dir
-            if self.barrel.length() < 1:
-                self.barrel = Vector2(self.type.size*2,0)
+            if smart_bots:
+                self.control_mid()
             else:
-                self.barrel.scale_to_length(self.type.size * 2)
-            if self.immunity <= 0:
-                if self.timer <= 0:
-                    self.timer = self.type.reload_time
-                    fire_bullet(
-                        self.x + self.barrel.x,
-                        self.y + self.barrel.y,
-                        self.type.fires,
-                        Vector2(0, 0).angle_to(self.barrel),
-                        self.type.spread,
-                        self.type.amount,
-                        self,
-                    )
-                if self.cool_down <= 0:
-                    self.cool_down = self.type.special_cooldown
-                    self.type.init_special_use(self)
+                self.control_dumb()
 
         if math.dist((0, 0), (self.x, self.y)) > boundary_size - self.type.size:
             new = Vector2(self.x, self.y)
@@ -1782,6 +1830,189 @@ class Player:
             self.immunity -= 1
         if self.wait > 0:
             self.wait -= 1
+    
+
+    def control_keyboard(self):
+        if key_down(keyboard_controls[self.movement[1]][0]):
+            self.vel.y += self.type.move_speed
+        if key_down(keyboard_controls[self.movement[1]][1]):
+            self.vel.x += self.type.move_speed
+        if key_down(keyboard_controls[self.movement[1]][2]):
+            self.vel.y -= self.type.move_speed
+        if key_down(keyboard_controls[self.movement[1]][3]):
+            self.vel.x -= self.type.move_speed
+        if key_down(keyboard_controls[self.movement[1]][5]):
+            self.barrel.rotate_ip(keyboard_barrel_rot_speed)
+        if key_down(keyboard_controls[self.movement[1]][6]):
+            self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
+        if self.immunity <= 0:
+            if key_down(keyboard_controls[self.movement[1]][4]):
+                if self.timer <= 0:
+                    self.timer = self.type.reload_time
+                    fire_bullet(
+                        self.x + self.barrel.x,
+                        self.y + self.barrel.y,
+                        self.type.fires,
+                        Vector2(0, 0).angle_to(self.barrel),
+                        self.type.spread,
+                        self.type.amount,
+                        self,
+                    )
+            if key_down(keyboard_controls[self.movement[1]][7]):
+                if self.cool_down <= 0:
+                    self.cool_down = self.type.special_cooldown
+                    self.type.init_special_use(self)
+    
+
+    def control_controller(self):
+        if self.immunity <= 0:
+            if controller_input[self.movement[1]][17][1]:
+                if self.timer <= 0:
+                    self.timer = self.type.reload_time
+                    fire_bullet(
+                        self.x + self.barrel.x,
+                        self.y + self.barrel.y,
+                        self.type.fires,
+                        Vector2(0, 0).angle_to(self.barrel),
+                        self.type.spread,
+                        self.type.amount,
+                        self,
+                    )
+            if controller_input[self.movement[1]][17][0]:
+                if self.cool_down <= 0:
+                    self.cool_down = self.type.special_cooldown
+                    self.type.init_special_use(self)
+        if aim_type == 1:
+            if (
+                controller_input[self.movement[1]][16][0] == 0
+                and controller_input[self.movement[1]][16][1] == 0
+            ):
+                self.barrel = Vector2(0, self.type.size * 2)
+            else:
+                new = Vector2(
+                    controller_input[self.movement[1]][16][0],
+                    -controller_input[self.movement[1]][16][1],
+                )
+                new.scale_to_length(self.type.size * 2)
+                self.barrel = new
+        else:
+            self.barrel.rotate_ip(
+                controller_input[self.movement[1]][16][0]
+                * -controller_barrel_rot_speed
+            )
+        self.vel.x += (
+            self.type.move_speed * controller_input[self.movement[1]][15][0]
+        )
+        self.vel.y -= (
+            self.type.move_speed * controller_input[self.movement[1]][15][1]
+        )
+
+
+    def control_dumb(self):
+        target = closest_player(Vector2(self.x, self.y), self.team,is_rand=True,rand=bot_rand)
+        dist = Vector2(self.x, self.y).distance_to(Vector2(target.x, target.y))
+        dir = Vector2(target.x, target.y) - Vector2(self.x, self.y)
+        self.bot_move(dist,target)
+        if dir.length() < 1:
+            dir = Vector2(1,0)
+        dir.normalize_ip()
+        dot = self.barrel.x*(dir.y)+self.barrel.y*(-dir.x)
+        if abs(dot) > self.type.size * 0.2:
+            if dot > 0:
+                self.barrel.rotate_ip(keyboard_barrel_rot_speed)
+            else:
+                self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
+
+        
+        if self.immunity <= 0:
+            if self.timer <= 0:
+                self.timer = self.type.reload_time
+                fire_bullet(
+                    self.x + self.barrel.x,
+                    self.y + self.barrel.y,
+                    self.type.fires,
+                    Vector2(0, 0).angle_to(self.barrel),
+                    self.type.spread,
+                    self.type.amount,
+                    self,
+                )
+            if self.cool_down <= 0:
+                self.cool_down = self.type.special_cooldown
+                self.type.init_special_use(self)
+    
+
+    def control_mid(self):
+        target:Player = closest_player(Vector2(self.x, self.y), self.team,is_rand=True,rand=bot_rand)
+        dist = Vector2(self.x, self.y).distance_to(Vector2(target.x, target.y))
+        if len(bullets) > 0:
+            near:Bullet = closest_bullet(Vector2(self.x, self.y), self.team,is_rand=True,rand=bot_rand)
+            dist_bul = Vector2(self.x, self.y).distance_to(Vector2(near.x, near.y))
+            if dist_bul < (near.bullet_type.size+near.bullet_type.speed) * smart_bot_avoidance and near.came_from.team != self.team:
+                if near.y < self.y:
+                    self.vel.y += self.type.move_speed
+                if near.x < self.x:
+                    self.vel.x += self.type.move_speed
+                if near.y > self.y:
+                    self.vel.y -= self.type.move_speed
+                if near.x > self.x:
+                    self.vel.x -= self.type.move_speed
+            else:
+                self.bot_move(dist,target)
+        else:
+            self.bot_move(dist,target)
+        toward_pos = (
+            Vector2(target.x, target.y)
+            + (target.vel / (self.type.fires.speed**1.5))
+            * Vector2((target.x - self.x), (target.y - self.y)).length()
+        )
+        dir = toward_pos - Vector2(self.x, self.y)
+        if dir.length() < 1:
+            dir = Vector2(1,0)
+        dir.normalize_ip()
+        dot = self.barrel.x*(dir.y)+self.barrel.y*(-dir.x)
+        if abs(dot) > self.type.size * 0.2:
+            if dot > 0:
+                self.barrel.rotate_ip(keyboard_barrel_rot_speed)
+            else:
+                self.barrel.rotate_ip(-keyboard_barrel_rot_speed)
+        if self.immunity <= 0:
+            if self.timer <= 0:
+                self.timer = self.type.reload_time
+                fire_bullet(
+                    self.x + self.barrel.x,
+                    self.y + self.barrel.y,
+                    self.type.fires,
+                    Vector2(0, 0).angle_to(self.barrel),
+                    self.type.spread,
+                    self.type.amount,
+                    self,
+                )
+            if self.cool_down <= 0:
+                self.cool_down = self.type.special_cooldown
+                self.type.init_special_use(self)
+    
+
+    def bot_move(self,dist,target):
+        if abs(dist - bot_target_dist) > bot_happy_dist:
+            if dist > bot_target_dist:
+                if target.y > self.y:
+                    self.vel.y += self.type.move_speed
+                if target.x > self.x:
+                    self.vel.x += self.type.move_speed
+                if target.y < self.y:
+                    self.vel.y -= self.type.move_speed
+                if target.x < self.x:
+                    self.vel.x -= self.type.move_speed
+            else:
+                if target.y < self.y:
+                    self.vel.y += self.type.move_speed
+                if target.x < self.x:
+                    self.vel.x += self.type.move_speed
+                if target.y > self.y:
+                    self.vel.y -= self.type.move_speed
+                if target.x > self.x:
+                    self.vel.x -= self.type.move_speed
+    
 
     def draw(self) -> None:
         if self.health > 0:
@@ -1890,7 +2121,7 @@ class Player:
 
 # Bullet Types
 blaster_bolt = BulletGroup("blaster_bolt", 8, 13, 12, (40, 200, 40), 0.4, 240)
-tank_shell = BulletGroup("tank_shell", 30, 12, 15, (40, 60, 100), 0.1, 300)
+tank_shell = BulletGroup("tank_shell", 18, 12, 15, (40, 60, 100), 0.1, 300)
 spin_char_bullet = BulletGroup("spin_char_bullet", 6, 15, 20, (50, 200, 50), 1.4, 100)
 shotgun_pellet = BulletGroup("shotgun_pellet", 4, 16, 8, (150, 150, 150), 0, 40)
 mine = BulletGroup("mine", 100, 10, 35, (240, 50, 50), 0, 800)
@@ -1911,7 +2142,7 @@ shotgun_char = PlayerCharacter(
     "shotgun_char",
     30,
     60,
-    6,
+    5,
     0.4,
     50,
     (240, 240, 40),
@@ -1936,12 +2167,12 @@ blaster_char = PlayerCharacter(
     "Blaster",
 )
 tank_char = PlayerCharacter(
-    "tank_char", 40, 150, 4, 0.7, 80, (60, 20, 200), tank_shell, 750, 1, 0, "Tank"
+    "tank_char", 40, 120, 3, 0.65, 80, (60, 20, 200), tank_shell, 1100, 1, 0, "Tank"
 )
 cloner_char = PlayerCharacter(
     "cloner_char",
     20,
-    10,
+    25,
     2,
     0.8,
     9,
@@ -1950,21 +2181,21 @@ cloner_char = PlayerCharacter(
     1300,
     1,
     0,
-    "Support",
+    "Support"
 )
 mine_layer = PlayerCharacter(
     "mine_layer", 40, 100, 2, 0.6, 60, (255, 128, 20), mine, 600, 1, 0, "Mines"
 )
 speed_char = PlayerCharacter(
-    "speed_char", 20, 35, 3, 0.8, 10, (255, 100, 255), speed_pellet, 600, 2, 40, "Speed"
+    "speed_char", 20, 35, 3, 0.8, 10, (255, 100, 255), speed_pellet, 600, 2, 20, "Speed"
 )
 spin_char = PlayerCharacter(
     "spin_char",
     40,
-    55,
-    0.8,
+    60,
+    1,
     0.95,
-    40,
+    35,
     (230, 255, 50),
     spin_char_bullet,
     1200,
@@ -1987,7 +2218,7 @@ turret_layer = PlayerCharacter(
     "Turrets",
 )
 orb_char = PlayerCharacter(
-    "orb_char", 40, 80, 3, 0.8, 70, (100, 10, 140), small_orb, 150, 1, 0, "Orbulator"
+    "orb_char", 40, 50, 3, 0.8, 70, (100, 10, 140), small_orb, 150, 1, 0, "Orbulator"
 )
 
 
@@ -2078,6 +2309,9 @@ if __name__ == "__main__":
             pause_menu.full_update(events)
         elif current_page == "settings":
             settings_menu.full_update(events)
+        elif current_page == 'stats':
+            update_stats()
+            stats_menu.full_update(events)
 
         declare_box_timer = max(declare_box_timer - 1, 0)
         if not declare_box_timer == 0:

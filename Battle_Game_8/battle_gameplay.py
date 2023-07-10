@@ -1183,20 +1183,16 @@ def all_colors_of(surface: pg.Surface):
 
 def collide_bullets():
     for b in bullets:
+        b:Bullet
         for p in players:
+            p:Player
             if not p.immunity > 0:
                 if not b.came_from.team == p.team:
                     if math.dist([b.x, b.y], [p.x, p.y]) < (
                         p.type.size + b.bullet_type.size
                     ):
-                        p.health -= b.bullet_type.damage
-
-                        # Death message + death counter
-                        if p.health <= 0 and not p.dead:
-                            declare(f"{b.came_from.team} killed a {p.team}")
-                            team_stats[team_to_num(b.came_from.team)][0] += 1
-                            team_stats[team_to_num(p.team)][1] += 1
-                            p.dead = True
+                        
+                        damage_player(p,b.came_from.team,b.bullet_type.damage)
 
                         if b in bullets:
                             del bullets[bullets.index(b)]
@@ -1430,6 +1426,16 @@ def clear_cache():
         pickle.dump(ez_cache_size,save,protocol=5)
 
 
+def damage_player(player,team,damage):
+    player.health -= damage
+
+    # Death message + death counter
+    if player.health <= 0 and not player.dead:
+        declare(f"{team} killed a {player.team}")
+        team_stats[team_to_num(team)][0] += 1
+        team_stats[team_to_num(player.team)][1] += 1
+        player.dead = True
+
 
 """
 Stuff in the special class is stuff that does not really fit as a bullet or a player, it can be anything
@@ -1448,15 +1454,15 @@ class SpecialGroup:
             self.fire_rate = 30
             self.life_time = 1000
             self.color = (50, 200, 200)
-            self.max_health = 40
+            self.max_health = 35
             self.fires = turret_bullet
 
         if kind == "damage_orb":
-            self.speed = 8
-            self.damage = 0.5
-            self.life_time = 500
-            self.radius = 230
-            self.size = 35
+            self.speed = 7
+            self.damage = 1
+            self.life_time = 250
+            self.radius = 250
+            self.size = 40
             self.color = (80, 10, 20)
             self.damage_color = (130, 20, 80)
 
@@ -1548,7 +1554,7 @@ class Special:
             )
             for i in closest:
                 if not i.immunity > 0:
-                    i.health -= self.type.damage
+                    damage_player(i,self.came_from.team,self.type.damage)
                     draw_line(
                         [i.x, i.y],
                         [self.x, self.y],
@@ -1635,7 +1641,7 @@ class BulletGroup:
 
 
 class Bullet:
-    def __init__(self, x, y, dir, bullet_type, came_from, add_vel=True) -> None:
+    def __init__(self, x, y, dir, bullet_type:BulletGroup, came_from, add_vel=True) -> None:
         self.x = x
         self.y = y
         self.vel = Vector2()
@@ -1661,7 +1667,10 @@ class Bullet:
             if not len(players) == 1:
                 toward = closest_player([self.x, self.y], self.came_from.team)
                 between = Vector2((toward.x - self.x), (toward.y - self.y))
-                between.scale_to_length(self.bullet_type.homing)
+                if between.length() < 1:
+                    between = Vector2(1,0)
+                else:
+                    between.scale_to_length(self.bullet_type.homing)
                 new = self.vel + between
                 new.scale_to_length(self.vel.length())
                 self.vel = new
@@ -2227,35 +2236,36 @@ class Player:
 
 # Bullet Types
 blaster_bolt = BulletGroup("blaster_bolt", 7, 12, 12, (40, 200, 40), 0.35, 240)
-tank_shell = BulletGroup("tank_shell", 25, 10, 15, (40, 60, 100), 0.1, 300)
+tank_shell = BulletGroup("tank_shell", 20, 8, 15, (40, 60, 100), 0.05, 200)
 spin_char_bullet = BulletGroup("spin_char_bullet", 6, 15, 20, (50, 200, 50), 1.4, 100)
-shotgun_pellet = BulletGroup("shotgun_pellet", 4, 18, 8, (150, 150, 150), 0, 30)
-mine = BulletGroup("mine", 100, 10, 35, (240, 50, 50), 0, 800)
+shotgun_pellet = BulletGroup("shotgun_pellet", 2.5, 18, 8, (150, 150, 150), 0, 25)
+mine = BulletGroup("mine", 100, 25, 40, (240, 50, 50), 0, 800)
 mini_mine = BulletGroup("mini_mine", 20, 30, 25, (230, 150, 150), 0, 500)
 shotgun_bomb = BulletGroup("shotgun_bomb", 75, 12, 50, (210, 240, 100), 0, 60)
 shrapnel = BulletGroup("shrapnel", 30, 20, 15, (105, 120, 50), 0, 40)
-speed_pellet = BulletGroup("speed_pellet", 4, 12, 6, (200, 40, 200), 0, 120)
-speed_big_pellet = BulletGroup("speed_big_pellet", 10, 18, 10, (100, 20, 100), 1, 25)
+speed_pellet = BulletGroup("speed_pellet", 4, 12, 10, (200, 40, 200), 0, 120)
+speed_big_pellet = BulletGroup("speed_big_pellet", 10, 18, 15, (100, 20, 100), 1, 25)
 rotator = BulletGroup("rotator", 35, 100, 20, (120, 200, 255), 0, 350)
-cloner_bullet = BulletGroup("cloner_bullet", 3, 12, 6, (20, 20, 20), 0.2, 200)
-turret_bullet = BulletGroup("turret_bullet", 4, 18, 10, (20, 128, 128), 0, 100)
-small_orb = BulletGroup("small_orb", 15, 17, 20, (80, 0, 200), 0.1, 100)
+cloner_bullet = BulletGroup("cloner_bullet", 3, 12, 12, (20, 20, 20), 0.2, 200)
+turret_bullet = BulletGroup("turret_bullet", 3, 15, 12, (20, 128, 128), 0, 95)
+small_orb = BulletGroup("small_orb", 10, 17, 18, (80, 0, 200), 0.1, 95)
 
 
 # Player Characters
 all_chars = []
+all_chars = []
 shotgun_char = PlayerCharacter(
     "shotgun_char",
     30,
-    60,
+    65,
     5,
     0.4,
-    50,
+    60,
     (240, 240, 40),
     shotgun_pellet,
-    1200,
-    13,
-    3,
+    1100,
+    9,
+    4,
     "Shotgun",
 )
 blaster_char = PlayerCharacter(
@@ -2273,7 +2283,7 @@ blaster_char = PlayerCharacter(
     "Blaster",
 )
 tank_char = PlayerCharacter(
-    "tank_char", 40, 120, 3, 0.65, 80, (60, 20, 200), tank_shell, 1100, 1, 0, "Tank"
+    "tank_char", 40, 120, 2.2, 0.65, 90, (60, 20, 200), tank_shell, 1100, 1, 0, "Tank"
 )
 cloner_char = PlayerCharacter(
     "cloner_char",
@@ -2290,7 +2300,7 @@ cloner_char = PlayerCharacter(
     "Support"
 )
 mine_layer = PlayerCharacter(
-    "mine_layer", 40, 100, 2, 0.6, 60, (255, 128, 20), mine, 600, 1, 0, "Mines"
+    "mine_layer", 40, 130, 2, 0.6, 45, (255, 128, 20), mine, 600, 1, 0, "Mines"
 )
 speed_char = PlayerCharacter(
     "speed_char", 20, 35, 3, 0.8, 10, (255, 100, 255), speed_pellet, 600, 2, 20, "Speed"
@@ -2312,19 +2322,19 @@ spin_char = PlayerCharacter(
 turret_layer = PlayerCharacter(
     "turret_layer",
     25,
-    75,
-    2,
+    65,
+    2.3,
     0.8,
     50,
     (100, 255, 255),
     turret_bullet,
-    600,
+    500,
     3,
-    5,
+    4,
     "Turrets",
 )
 orb_char = PlayerCharacter(
-    "orb_char", 40, 50, 3, 0.8, 70, (100, 10, 140), small_orb, 150, 1, 0, "Orbulator"
+    "orb_char", 40, 45, 2.8, 0.82, 65, (100, 10, 140), small_orb, 600, 1, 0, "Orbulator"
 )
 
 

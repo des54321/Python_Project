@@ -3,7 +3,7 @@ from math import floor
 import pygame as pg
 import os
 from pygame.math import Vector2
-from random import random
+from random import random, randint
 import copy
 import menu_engine
 from menu_engine import Menu, Button, Slider, Text
@@ -216,6 +216,7 @@ def go_to_settings():
 
 def go_to_start():
     global current_page
+    splash_text_text.text = splash_texts[randint(0,len(splash_texts)-1)]
     current_page = "start"
 
 
@@ -241,6 +242,75 @@ special_ready_color = (160, 30, 150)
 declare_box_length = 100
 declare_box_fade = 10
 declare_box_timer = 0
+
+
+#Splash texts
+splash_texts = [
+    'Now with 90% less circles!',
+    "'Great Name' - Obama",
+    "For when you're sick of War Game",
+    "Comes with 8 settings!",
+    "Now with a real loading screen",
+    "'Backgrounds suck' - Obama",
+    "3200 lines of code for this!?",
+    "Game not included",
+    "9 characters = 9 times less balaced!",
+    "Minimalist Design!",
+    "baguette no included",
+    "Enough spagetti to feed a city",
+    "'joy_num' is the only var with J!",
+    "WARNING: Contains still images",
+    "Requires mouse for menus!",
+    "Fan is unoperational",
+    "Max 4 teams, max 8 players",
+    "The bots don't cheat I swear!",
+    "Hidden 'quit' key (like VIM!)",
+    "Few snakes were harmed in the making",
+    "All in one file!",
+    "'Consistent pixel size' - Obama",
+    "We don't talk about the sheild",
+    "Efficiency begone!",
+    "Moving fan = too hard",
+    "controller_barrel_rot_speed_slider_func_settings_menu_slider_3_below_developer_art_slider_var",
+    "Crashes on occasion",
+    "Used to use color!",
+    "github.com/des54321/Python_Project",
+    "Open source!",
+    "lorem ipsum",
+    "We're past those circles",
+    "Evolved from 'Battle Gam'",
+    "'The design is very human' - Obama",
+    "Ariel free!",
+    "The final battle",
+    "Started in a class (not for python)",
+    "Took a year to make *tear*",
+    '"Finished"',
+    '90+ commits!',
+    'Controller support?',
+    "Has some odd quirks (bugs)",
+    "gL1cH  f r33",
+    "With art from Brett in our hearts",
+    "Exactly 2500 lines! (until I fix a bug)",
+    "75% was made to 'My Mix'",
+    "Playtested in my dreams"<
+    "'Best soundtrack' - Obama",
+    "'Very satifying SFX' - Obama",
+    "I wonder who wrote this awesome background music?",
+    "Look! The cursor changes!",
+    "'Its the little things it bad' - Obama",
+    "menu_engine carried fr",
+    "'Loading' does less than you think",
+    "Credit: Desmond Holman",
+    "For the fam",
+    "Blood, sweat, and carpal tunnel",
+    "Not in scratch!",
+    "Replace 'Battle' with 'py'",
+    "Credit: Obama fror quotes",
+    "Diverse menus!",
+    "Preinstalled with a BitCoin miner!",
+    "Ctrl [REDACTED] for lag!",
+    "I'll never tell how to close!"
+]
 
 # Camera
 cam_x = 0
@@ -609,7 +679,7 @@ char_select_button = Button(
     text_pos=["right", "center"],
 )
 title_text = Text(
-    "Battle Game", (color_pal[0], color_pal[2]), (0.4, 0.1), (0.4, 0.2), False
+    "Battle Game", (color_pal[0], color_pal[2]), (0.56, 0.1), (0.4, 0.2), False, text_pos=('right','center')
 )
 stats_button = Button(
     "Stats ",
@@ -621,6 +691,9 @@ stats_button = Button(
     15,
     text_pos=["right", "center"],
 )
+splash_text_text = Text(
+    splash_texts[randint(0,len(splash_texts)-1)], (color_pal[0], color_pal[3]), (0.55, 0.25), (0.4, 0.06), False, text_pos=('right','center')
+)
 
 start_menu = Menu(
     screen,
@@ -630,7 +703,7 @@ start_menu = Menu(
     sh,
     color_pal[0],
     0,
-    [start_button, title_text, settings_button_main, char_select_button,stats_button],
+    [start_button, title_text, settings_button_main, char_select_button,stats_button,splash_text_text],
 )
 
 
